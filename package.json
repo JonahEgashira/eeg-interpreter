@@ -29,6 +29,7 @@
     "dotenv": "^16.4.5",
     "electron-store": "^10.0.0",
     "lucide-react": "^0.428.0",
+    "radix-ui": "^1.0.1",
     "shadcn-ui": "^0.2.3",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7"

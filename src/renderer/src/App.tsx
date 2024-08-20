@@ -1,66 +1,56 @@
-import { useState } from 'react'
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import * as React from 'react'
+import { useState, useRef } from 'react'
+import { Button } from './components/ui/Button'
+import { Textarea } from './components/ui/Textarea'
+import { Tooltip, TooltipTrigger } from './components/ui/Tooltip'
+import { IconArrowElbow } from './components/ui/Icons'
 
 function App(): JSX.Element {
-  const [output, setOutput] = useState<string>('')
+  const [input, setInput] = useState<string>('')
+  const inputRef = useRef<HTMLTextAreaElement | null>(null)
 
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
-
-  const handleExecutePythonCode = async (): Promise<void> => {
-    const pythonCode = `
-import sys
-
-def main():
-    print("Hello from embedded Python code!")
-
-if __name__ == "__main__":
-    main()
-`
-    try {
-      // 'run-python-code' チャンネルを使ってPythonコードを実行する
-      const result = await window.electron.ipcRenderer.invoke('run-python-code', pythonCode)
-      setOutput(result)
-    } catch (error) {
-      if (error instanceof Error) {
-        setOutput(`Error: ${error.message}`)
-      } else {
-        setOutput('An unknown error occurred')
-      }
+  const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      handleSubmit()
     }
   }
 
+  const handleSubmit = (): void => {
+    if (input.trim() === '') return
+    console.log('Message sent:', input)
+    setInput('')
+  }
+
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
+    <div className="relative">
+      <Textarea
+        ref={inputRef}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        placeholder="Send a message."
+        className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
+        autoFocus
+        spellCheck={false}
+        autoComplete="off"
+        autoCorrect="off"
+        name="message"
+        rows={1}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <div className="absolute right-0 top-[13px] sm:right-4">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button type="submit" size="icon" disabled={input === ''} onClick={handleSubmit}>
+              <IconArrowElbow />
+              <span className="sr-only">Send message</span>
+            </Button>
+          </TooltipTrigger>
+          <div className="tooltip-content">Send</div>
+        </Tooltip>
       </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={handleExecutePythonCode}>
-            Execute Python Code
-          </a>
-        </div>
-      </div>
-      <pre>{output}</pre>
-      <Versions></Versions>
-    </>
+    </div>
   )
 }
 
