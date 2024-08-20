@@ -3,7 +3,6 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { startJupyterServer, stopJupyterServer, runPythonCode } from './services/PythonRunner'
 import icon from '../../resources/icon.png?asset'
-import { start } from 'repl'
 
 function createWindow(): void {
   // Create the browser window.
