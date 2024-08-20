@@ -1,43 +1,79 @@
-import { execFile } from 'child_process'
-import { writeFile, unlink } from 'fs/promises'
-import { tmpdir } from 'os'
-import { join } from 'path'
+import { spawn, ChildProcess } from 'child_process'
+import { KernelManager, ServerConnection } from '@jupyterlab/services'
 
-export async function runPythonCode(code: string): Promise<string> {
-  const tmpFilePath = join(tmpdir(), `temp_script_${Date.now()}.py`)
+let jupyterProcess: ChildProcess | null = null
 
-  try {
-    await writeFile(tmpFilePath, code)
-    console.log(`File created at ${tmpFilePath}`)
+export function startJupyterServer(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    jupyterProcess = spawn('jupyter', ['notebook', '--no-browser', '--port=8888'])
 
-    const result = await new Promise<string>((resolve, reject) => {
-      execFile('python', [tmpFilePath], (error, stdout, stderr) => {
-        if (error) {
-          reject(`Error: ${stderr}`)
-        } else {
-          resolve(stdout)
+    if (!jupyterProcess) {
+      reject(new Error('Failed to start Jupyter server'))
+      return
+    }
+
+    if (jupyterProcess.stdout) {
+      jupyterProcess.stdout.on('data', (data) => {
+        console.log(`Jupyter stdout: ${data}`)
+        if (data.toString().includes('http://localhost:8888/')) {
+          resolve()
         }
       })
+    }
+
+    if (jupyterProcess.stderr) {
+      jupyterProcess.stderr.on('data', (data) => {
+        console.error(`Jupyter stderr: ${data}`)
+      })
+    }
+
+    jupyterProcess.on('close', (code) => {
+      console.log(`Jupyter server exited with code ${code}`)
+      jupyterProcess = null
     })
 
-    return result
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Failed to write or execute the script: ${error.message}`)
-    } else {
-      console.error(`Failed to write or execute the script: ${error}`)
-    }
-    throw error
-  } finally {
-    try {
-      await unlink(tmpFilePath)
-      console.log(`File deleted at ${tmpFilePath}`)
-    } catch (unlinkError) {
-      if (unlinkError instanceof Error) {
-        console.error(`Failed to delete the script file: ${unlinkError.message}`)
-      } else {
-        console.error(`Failed to delete the script file: ${unlinkError}`)
+    jupyterProcess.on('error', (err) => {
+      console.error('Failed to start Jupyter server:', err)
+      reject(err)
+    })
+  })
+}
+
+export function stopJupyterServer(): void {
+  if (jupyterProcess) {
+    jupyterProcess.kill()
+    jupyterProcess = null
+    console.log('Jupyter server stopped')
+  }
+}
+
+export async function runPythonCode(code: string): Promise<string> {
+  const settings = ServerConnection.makeSettings({
+    baseUrl: 'http://localhost:8888', // ここでJupyterサーバーのURLを指定
+    wsUrl: 'ws://localhost:8888' // WebSocketのURLも指定
+  })
+
+  const kernelManager = new KernelManager({ serverSettings: settings })
+  const kernel = await kernelManager.startNew({ name: 'python3' })
+
+  const future = kernel.requestExecute({ code })
+
+  return new Promise((resolve, reject) => {
+    let result = ''
+    future.onIOPub = (msg): void => {
+      if (msg.header.msg_type === 'execute_result' || msg.header.msg_type === 'stream') {
+        result += (msg.content as { text: string }).text
+      } else if (msg.header.msg_type === 'error') {
+        const errorMsg = (msg.content as { evalue: string }).evalue
+        reject(new Error(errorMsg))
       }
     }
-  }
+
+    future.done.then(() => {
+      kernel
+        .shutdown()
+        .then(() => resolve(result))
+        .catch(reject)
+    })
+  })
 }

@@ -1,11 +1,12 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { runPythonCode } from './services/PythonRunner'
+import { startJupyterServer, stopJupyterServer, runPythonCode } from './services/PythonRunner'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
   // Create the browser window.
+  console.log('Creating main window...')
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
@@ -34,14 +35,27 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  mainWindow.on('close', () => {
+    stopJupyterServer()
+  })
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+  createWindow()
+
+  try {
+    await startJupyterServer()
+  } catch (error) {
+    console.error('Failed to start Jupyter server:', error)
+    app.quit()
+  }
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -57,8 +71,6 @@ app.whenReady().then(() => {
   ipcMain.handle('run-python-code', async (_, code: string) => {
     return runPythonCode(code)
   })
-
-  createWindow()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
