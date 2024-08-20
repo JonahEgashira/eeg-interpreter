@@ -1,9 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { execFile } from 'child_process'
-import { writeFile, unlink } from 'fs/promises'
-import { tmpdir } from 'os'
+import { runPythonCode } from './services/PythonRunner'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
@@ -56,43 +54,8 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   // IPC Python Execution
-  ipcMain.handle('run-python-code', async (event, code) => {
-    const tmpFilePath = join(tmpdir(), `temp_script_${Date.now()}.py`)
-
-    try {
-      await writeFile(tmpFilePath, code)
-      console.log(`File created at ${tmpFilePath}`)
-
-      const result = await new Promise((resolve, reject) => {
-        execFile('python', [tmpFilePath], (error, stdout, stderr) => {
-          if (error) {
-            reject(`Error: ${stderr}`)
-          } else {
-            resolve(stdout)
-          }
-        })
-      })
-
-      return result
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Failed to write or execute the script: ${error.message}`)
-      } else {
-        console.error(`Failed to write or execute the script: ${error}`)
-      }
-      throw error
-    } finally {
-      try {
-        await unlink(tmpFilePath)
-        console.log(`File deleted at ${tmpFilePath}`)
-      } catch (unlinkError) {
-        if (unlinkError instanceof Error) {
-          console.error(`Failed to delete the script file: ${unlinkError.message}`)
-        } else {
-          console.error(`Failed to delete the script file: ${unlinkError}`)
-        }
-      }
-    }
+  ipcMain.handle('run-python-code', async (_, code: string) => {
+    return runPythonCode(code)
   })
 
   createWindow()
