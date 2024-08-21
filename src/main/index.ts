@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { startJupyterServer, stopJupyterServer, runPythonCode } from './services/pythonRunner'
+import { startJupyterServer, stopJupyterServer, runPythonCode } from './services/PythonRunner'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
