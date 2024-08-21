@@ -21,18 +21,22 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^0.0.51",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@jupyterlab/services": "^7.2.4",
+    "ai": "^3.3.14",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "electron-store": "^10.0.0",
     "lucide-react": "^0.428.0",
     "radix-ui": "^1.0.1",
+    "react-textarea-autosize": "^8.5.3",
     "shadcn-ui": "^0.2.3",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
