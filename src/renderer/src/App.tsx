@@ -1,5 +1,6 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
+import { createOpenAI } from '@ai-sdk/openai'
 import { processInput } from '@renderer/lib/chat/llm'
 
 function App(): JSX.Element {
@@ -7,9 +8,23 @@ function App(): JSX.Element {
   const [messages, setMessages] = React.useState<{ id: string; text: string; isUser: boolean }[]>(
     []
   )
+  const [isComposing, setIsComposing] = React.useState(false)
+
+  const openaiInstance = React.useMemo(async () => {
+    try {
+      const apiKey = await window.api.getEnvVar('OPENAI_API_KEY')
+      if (!apiKey) {
+        throw new Error('OPENAI_API_KEY not found in environment variables')
+      }
+      return createOpenAI({ apiKey: apiKey })
+    } catch (error) {
+      console.error('Error initializing OpenAI:', error)
+      throw error
+    }
+  }, [])
 
   const handleKeyDown = async (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter' && !event.shiftKey && !isComposing) {
       event.preventDefault()
 
       const userMessage = input.trim()
@@ -23,7 +38,8 @@ function App(): JSX.Element {
       setInput('')
 
       try {
-        const aiResponse = await processInput(userMessage)
+        const openai = await openaiInstance
+        const aiResponse = await processInput(userMessage, openai)
 
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -49,6 +65,14 @@ function App(): JSX.Element {
     }
   }
 
+  const handleCompositionStart = () => {
+    setIsComposing(true)
+  }
+
+  const handleCompositionEnd = () => {
+    setIsComposing(false)
+  }
+
   return (
     <div className="container mx-auto p-4">
       <div className="space-y-4">
@@ -68,6 +92,8 @@ function App(): JSX.Element {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         placeholder="Type your message and press Enter..."
         className="mt-4 w-full p-2 border rounded-md resize-none"
         minRows={1}

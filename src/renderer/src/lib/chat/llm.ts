@@ -15,18 +15,13 @@ export interface Message {
   content: string
 }
 
-export async function processInput(input: string): Promise<string> {
+export async function processInput(
+  input: string,
+  openai: ReturnType<typeof createOpenAI>
+): Promise<string> {
   const parsedInput = InputSchema.parse({ input })
 
   try {
-    const apiKey = await window.api.getEnvVar('OPENAI_API_KEY')
-
-    if (!apiKey) {
-      throw new Error('OPENAI_API_KEY not found in environment variables')
-    }
-
-    const openai = createOpenAI({ apiKey: apiKey })
-
     const { text } = await generateText({
       model: openai('gpt-4o-mini'),
       prompt: parsedInput.input
