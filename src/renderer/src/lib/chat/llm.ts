@@ -10,6 +10,11 @@ const ResponseSchema = z.object({
   text: z.string()
 })
 
+export interface Message {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export async function processInput(input: string): Promise<string> {
   const parsedInput = InputSchema.parse({ input })
 
