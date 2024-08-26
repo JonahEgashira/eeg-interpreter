@@ -37,12 +37,9 @@ function App(): JSX.Element {
 
   const runHelloWorldPython = async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
-        'run-python-code',
-        'print("Hello, World!")'
-      )
+      const result = await window.api.runPythonCode('print("Hello, World!")')
       console.log('Python output:', result)
-      // Pythonの出力をメッセージとして表示する例
+
       setMessages((prevMessages) => [
         ...prevMessages,
         { id: String(Date.now()), text: result, isUser: false }
