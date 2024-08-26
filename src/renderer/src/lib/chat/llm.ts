@@ -11,7 +11,7 @@ const ResponseSchema = z.object({
 })
 
 async function getOpenAIApiKey(): Promise<string> {
-  const apiKey = await window.electron.ipcRenderer.invoke('get-env-vars', 'OPENAI_API_KEY')
+  const apiKey = await window.api.getEnvVar('OPENAI_API_KEY')
 
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY not found in environment variables')
