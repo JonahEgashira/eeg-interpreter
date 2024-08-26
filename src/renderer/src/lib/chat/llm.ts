@@ -10,21 +10,15 @@ const ResponseSchema = z.object({
   text: z.string()
 })
 
-async function getOpenAIApiKey(): Promise<string> {
-  const apiKey = await window.api.getEnvVar('OPENAI_API_KEY')
-
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY not found in environment variables')
-  }
-
-  return apiKey
-}
-
 export async function processInput(input: string): Promise<string> {
   const parsedInput = InputSchema.parse({ input })
 
   try {
-    const apiKey = await getOpenAIApiKey()
+    const apiKey = await window.api.getEnvVar('OPENAI_API_KEY')
+
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY not found in environment variables')
+    }
 
     const openai = createOpenAI({ apiKey: apiKey })
 
