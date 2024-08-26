@@ -1,8 +1,8 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { startJupyterServer, stopJupyterServer, runPythonCode } from './services/PythonRunner'
-import * as dotenv from 'dotenv'
+import { startJupyterServer, stopJupyterServer } from './services/PythonRunner'
+import { setupIpcHandlers } from './utils/ipcHandlers'
 import icon from '../../resources/icon.png?asset'
 
 function createWindow(): void {
@@ -49,20 +49,7 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
-  // IPC Python Execution
-  ipcMain.handle('run-python-code', async (_, code: string) => {
-    return runPythonCode(code)
-  })
-
-  dotenv.config()
-  const allowedEnvVars = ['OPENAI_API_KEY']
-
-  ipcMain.handle('get-env-vars', (_, key: string) => {
-    if (allowedEnvVars.includes(key)) {
-      return process.env[key]
-    }
-    return null
-  })
+  setupIpcHandlers()
 
   createWindow()
 

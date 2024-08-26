@@ -35,6 +35,23 @@ function App(): JSX.Element {
     }
   }
 
+  const runHelloWorldPython = async () => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke(
+        'run-python-code',
+        'print("Hello, World!")'
+      )
+      console.log('Python output:', result)
+      // Pythonの出力をメッセージとして表示する例
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { id: String(Date.now()), text: result, isUser: false }
+      ])
+    } catch (error) {
+      console.error('Error running Python code:', error)
+    }
+  }
+
   return (
     <div className="container mx-auto p-4">
       <div className="space-y-4">
@@ -60,6 +77,13 @@ function App(): JSX.Element {
         maxRows={5}
         autoFocus
       />
+
+      <button
+        onClick={runHelloWorldPython}
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+      >
+        Run Python Hello World
+      </button>
     </div>
   )
 }
