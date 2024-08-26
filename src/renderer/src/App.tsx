@@ -1,7 +1,7 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
 import { createOpenAI } from '@ai-sdk/openai'
-import { generateResponse, type Message } from '@renderer/lib/chat/llm'
+import { generateResponse, InputSchema, type Message } from '@renderer/lib/chat/llm'
 
 function App(): JSX.Element {
   const [input, setInput] = React.useState<string>('')
@@ -26,9 +26,9 @@ function App(): JSX.Element {
       event.preventDefault()
 
       const userMessage = input.trim()
-      if (userMessage === '') return
+      const parsedUserMessage = InputSchema.parse({ input: userMessage })
 
-      const newUserMessage: Message = { role: 'user', content: userMessage }
+      const newUserMessage: Message = { role: 'user', content: parsedUserMessage.input }
 
       setMessages((prevMessages) => [...prevMessages, newUserMessage])
 

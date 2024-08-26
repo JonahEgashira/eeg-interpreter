@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateText } from 'ai'
 
-const InputSchema = z.object({
+export const InputSchema = z.object({
   input: z.string().min(1, 'Input must not be empty')
 })
 
@@ -20,9 +20,6 @@ export async function generateResponse(
   openai: ReturnType<typeof createOpenAI>
 ): Promise<string> {
   try {
-    const lastUserMessage = messages[messages.length - 1]
-    InputSchema.parse({ input: lastUserMessage.content })
-
     const { text } = await generateText({
       model: openai('gpt-4o-mini'),
       system: 'You are a helpful assistant.',
