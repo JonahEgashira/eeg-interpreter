@@ -1,13 +1,11 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
 import { createOpenAI } from '@ai-sdk/openai'
-import { processInput } from '@renderer/lib/chat/llm'
+import { generateResponse, type Message } from '@renderer/lib/chat/llm'
 
 function App(): JSX.Element {
   const [input, setInput] = React.useState<string>('')
-  const [messages, setMessages] = React.useState<{ id: string; text: string; isUser: boolean }[]>(
-    []
-  )
+  const [messages, setMessages] = React.useState<Message[]>([])
   const [isComposing, setIsComposing] = React.useState(false)
 
   const openaiInstance = React.useMemo(async () => {
@@ -30,21 +28,20 @@ function App(): JSX.Element {
       const userMessage = input.trim()
       if (userMessage === '') return
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { id: String(Date.now()), text: userMessage, isUser: true }
-      ])
+      const newUserMessage: Message = { role: 'user', content: userMessage }
+
+      setMessages((prevMessages) => [...prevMessages, newUserMessage])
 
       setInput('')
 
       try {
         const openai = await openaiInstance
-        const aiResponse = await processInput(userMessage, openai)
 
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          { id: String(Date.now()), text: aiResponse, isUser: false }
-        ])
+        const aiResponse = await generateResponse([...messages, newUserMessage], openai)
+
+        const newAIMessage: Message = { role: 'assistant', content: aiResponse }
+
+        setMessages((prevMessages) => [...prevMessages, newAIMessage])
       } catch (error) {
         console.error('Error processing input:', error)
       }
@@ -56,10 +53,7 @@ function App(): JSX.Element {
       const result = await window.api.runPythonCode('print("Hello, World!")')
       console.log('Python output:', result)
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { id: String(Date.now()), text: result, isUser: false }
-      ])
+      setMessages((prevMessages) => [...prevMessages, { role: 'assistant', content: result }])
     } catch (error) {
       console.error('Error running Python code:', error)
     }
@@ -76,14 +70,14 @@ function App(): JSX.Element {
   return (
     <div className="container mx-auto p-4">
       <div className="space-y-4">
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div
-            key={message.id}
+            key={index}
             className={`p-3 rounded-md ${
-              message.isUser ? 'bg-blue-100 text-right' : 'bg-gray-100 text-left'
+              message.role === 'user' ? 'bg-blue-100 text-right' : 'bg-gray-100 text-left'
             }`}
           >
-            {message.text}
+            {message.content}
           </div>
         ))}
       </div>

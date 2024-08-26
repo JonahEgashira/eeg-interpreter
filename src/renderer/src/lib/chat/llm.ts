@@ -15,16 +15,18 @@ export interface Message {
   content: string
 }
 
-export async function processInput(
-  input: string,
+export async function generateResponse(
+  messages: Message[],
   openai: ReturnType<typeof createOpenAI>
 ): Promise<string> {
-  const parsedInput = InputSchema.parse({ input })
-
   try {
+    const lastUserMessage = messages[messages.length - 1]
+    InputSchema.parse({ input: lastUserMessage.content })
+
     const { text } = await generateText({
       model: openai('gpt-4o-mini'),
-      prompt: parsedInput.input
+      system: 'You are a helpful assistant.',
+      messages: messages
     })
 
     const parsedResponse = ResponseSchema.parse({ text })
