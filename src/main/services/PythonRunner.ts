@@ -42,12 +42,25 @@ export function startJupyterServer(): Promise<void> {
   })
 }
 
-export function stopJupyterServer(): void {
-  if (jupyterProcess) {
-    jupyterProcess.kill()
-    jupyterProcess = null
-    console.log('Jupyter server stopped')
-  }
+export function stopJupyterServer(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (jupyterProcess) {
+      jupyterProcess.on('close', () => {
+        console.log('Jupyter server stopped')
+        jupyterProcess = null
+        resolve()
+      })
+
+      jupyterProcess.on('error', (err) => {
+        console.error('Error stopping Jupyter server:', err)
+        reject(err)
+      })
+
+      jupyterProcess.kill()
+    } else {
+      resolve()
+    }
+  })
 }
 
 export async function runPythonCode(code: string): Promise<string> {

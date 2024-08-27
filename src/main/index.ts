@@ -38,7 +38,7 @@ function createWindow(): void {
   }
 
   mainWindow.on('close', () => {
-    stopJupyterServer()
+    mainWindow.destroy()
   })
 }
 
@@ -84,8 +84,20 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    stopJupyterServer().then(() => {
+      app.quit()
+    })
   }
+})
+
+app.on('before-quit', () => {
+  stopJupyterServer()
+    .then(() => {
+      console.log('Jupyter server stopped')
+    })
+    .catch((err) => {
+      console.error('Error stopping Jupyter server:', err)
+    })
 })
 
 // In this file you can include the rest of your app"s specific main process
