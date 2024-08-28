@@ -11,8 +11,8 @@ export function startJupyterServer(): Promise<void> {
       'notebook',
       '--no-browser',
       '--port=8888',
-      `--NotebookApp.token=${JUPYTER_TOKEN}`,
-      '--NotebookApp.disable_check_xsrf=True'
+      `--IdentityProvider.token=${JUPYTER_TOKEN}`,
+      '--ServerApp.disable_check_xsrf=True'
     ])
     if (!jupyterProcess) {
       reject(new Error('Failed to start Jupyter server'))
