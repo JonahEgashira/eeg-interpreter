@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { runPythonCode } from '../services/PythonRunner'
+import { runPythonCode } from './PythonRunner'
 import * as dotenv from 'dotenv'
 
 dotenv.config()
