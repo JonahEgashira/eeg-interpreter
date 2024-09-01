@@ -14,9 +14,8 @@ const ResponseSchema = z.object({
 
 export async function generateResponse(messages: Message[], openaiApiKey: string): Promise<string> {
   try {
-    for (const message of messages) {
-      await appendMessage(message)
-    }
+    const lastMessage = messages[messages.length - 1]
+    await appendMessage(lastMessage)
 
     const openai = createOpenAI({ apiKey: openaiApiKey })
 
