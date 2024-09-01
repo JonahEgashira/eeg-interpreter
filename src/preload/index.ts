@@ -1,14 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { Conversation, Message } from '@shared/types/chat'
 
 // Custom APIs for renderer
 const api = {
-  runPythonCode: async (code: string) => {
-    return await ipcRenderer.invoke('run-python-code', code)
-  },
-  getEnvVar: async (key: string) => {
-    return await ipcRenderer.invoke('get-env-vars', key)
-  }
+  runPythonCode: (code: string) => ipcRenderer.invoke('run-python-code', code),
+  getEnvVar: (key: string) => ipcRenderer.invoke('get-env-vars', key),
+  saveConversation: (conversation: Conversation) =>
+    ipcRenderer.invoke('save-conversation', conversation),
+  loadConversation: () => ipcRenderer.invoke('load-conversation'),
+  appendMessage: (message: Message) => ipcRenderer.invoke('append-message', message)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

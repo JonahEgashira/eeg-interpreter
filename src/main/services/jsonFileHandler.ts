@@ -1,8 +1,9 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { Conversation, Message } from '@shared/chat'
+import { Conversation, Message } from '@shared/types/chat'
+import { app } from 'electron'
 
-const filePath = path.join(__dirname, 'conversation.json')
+const filePath = path.join(app.getPath('userData'), 'conversation.json')
 
 export function saveConversationFile(conversation: Conversation): void {
   const jsonString = JSON.stringify(conversation.toJSON(), null, 2)

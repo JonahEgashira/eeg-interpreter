@@ -1,7 +1,9 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
 import { createOpenAI } from '@ai-sdk/openai'
-import { generateResponse, InputSchema, type Message } from '@renderer/lib/chat/llm'
+import { generateResponse, InputSchema } from '@renderer/lib/chat/llm'
+import { Message } from '@shared/types/chat'
+import { getEnvVar, runPythonCode } from './lib/ipcFunctions'
 
 function App(): JSX.Element {
   const [input, setInput] = React.useState<string>('')
@@ -10,7 +12,7 @@ function App(): JSX.Element {
 
   const openaiInstance = React.useMemo(async () => {
     try {
-      const apiKey = await window.api.getEnvVar('OPENAI_API_KEY')
+      const apiKey = await getEnvVar('OPENAI_API_KEY')
       if (!apiKey) {
         throw new Error('OPENAI_API_KEY not found in environment variables')
       }
@@ -50,7 +52,7 @@ function App(): JSX.Element {
 
   const runHelloWorldPython = async () => {
     try {
-      const result = await window.api.runPythonCode('print("Hello, World!")')
+      const result = await runPythonCode('print("Hello, World!")')
       console.log('Python output:', result)
 
       setMessages((prevMessages) => [...prevMessages, { role: 'assistant', content: result }])

@@ -5,7 +5,7 @@ import {
   loadConversationFromFile,
   appendMessageToFile
 } from './jsonFileHandler'
-import { Conversation, Message } from '@shared/chat'
+import { Conversation, Message } from '@shared/types/chat'
 import * as dotenv from 'dotenv'
 
 dotenv.config()
