@@ -2,12 +2,13 @@ import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
 import { generateResponse, InputSchema } from '@renderer/lib/chat/llm'
 import { Message } from '@shared/types/chat'
-import { getEnvVar, runPythonCode } from './lib/ipcFunctions'
+import { getEnvVar } from './lib/ipcFunctions'
+import { Send } from 'lucide-react'
 
 function App(): JSX.Element {
-  const [input, setInput] = React.useState('')
+  const [input, setInput] = React.useState<string>('')
   const [messages, setMessages] = React.useState<Message[]>([])
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isComposing, setIsComposing] = React.useState(false)
   const [openaiApiKey, setOpenaiApiKey] = React.useState<string | null>(null)
 
   React.useEffect(() => {
@@ -19,7 +20,6 @@ function App(): JSX.Element {
         console.error('Error fetching OpenAI API key:', error)
       }
     }
-
     fetchOpenaiApiKey()
   }, [])
 
@@ -29,80 +29,78 @@ function App(): JSX.Element {
 
     try {
       const parsedUserMessage = InputSchema.parse({ input: userMessage })
-
       const newUserMessage: Message = { role: 'user', content: parsedUserMessage.input }
       setMessages((prevMessages) => [...prevMessages, newUserMessage])
       setInput('')
-      setIsLoading(true)
 
       const aiResponse = await generateResponse([...messages, newUserMessage], openaiApiKey)
-
       const newAIMessage: Message = { role: 'assistant', content: aiResponse }
       setMessages((prevMessages) => [...prevMessages, newAIMessage])
     } catch (error) {
       console.error('Error processing input:', error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  const handleRunPythonHelloWorld = async () => {
-    try {
-      setIsLoading(true)
-      const result = await runPythonCode('print("Hello, World!")')
-      console.log('Python output:', result)
-
-      setMessages((prevMessages) => [...prevMessages, { role: 'assistant', content: result }])
-    } catch (error) {
-      console.error('Error running Python code:', error)
-    } finally {
-      setIsLoading(false)
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey && !isComposing) {
+      event.preventDefault()
+      handleSendMessage()
     }
+  }
+
+  const handleCompositionStart = () => {
+    setIsComposing(true)
+  }
+
+  const handleCompositionEnd = () => {
+    setIsComposing(false)
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`p-3 rounded-md ${
-              message.role === 'user' ? 'bg-blue-100 text-right' : 'bg-gray-100 text-left'
-            }`}
-          >
-            {message.content}
+    <div className="flex flex-col h-screen bg-gray-100">
+      <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
+        <div className="w-full max-w-4xl h-full flex flex-col">
+          <div className="flex-grow overflow-auto space-y-4 min-h-[50vh]">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`p-3 rounded-lg w-full ${
+                  message.role === 'user'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black border border-gray-200'
+                }`}
+              >
+                {message.content}
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
-
-      <div className="mt-4 flex">
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-          placeholder="Type your message and press Enter..."
-          className="flex-grow p-2 border rounded-md resize-none mr-2"
-          minRows={1}
-          maxRows={5}
-          autoFocus
-          disabled={isLoading}
-        />
-        <button
-          onClick={handleSendMessage}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
-          disabled={isLoading || !input.trim()}
-        >
-          Send
-        </button>
+      <div className="p-4 bg-white border-t border-gray-200">
+        <div className="max-w-4xl mx-auto w-full">
+          <div className="flex items-center space-x-2">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onCompositionStart={handleCompositionStart}
+              onCompositionEnd={handleCompositionEnd}
+              placeholder="Type your message..."
+              className="flex-grow p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-black"
+              minRows={1}
+              maxRows={3}
+              autoFocus
+            />
+            <button
+              onClick={handleSendMessage}
+              className="p-2 bg-black text-white rounded-md disabled:opacity-50 hover:bg-gray-800 transition-colors"
+              disabled={!input.trim() || !openaiApiKey}
+            >
+              <Send size={20} />
+            </button>
+          </div>
+        </div>
       </div>
-
-      <button
-        onClick={handleRunPythonHelloWorld}
-        className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md disabled:opacity-50"
-        disabled={isLoading}
-      >
-        Run Python Hello World
-      </button>
     </div>
   )
 }
