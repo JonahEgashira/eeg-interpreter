@@ -57,17 +57,17 @@ function App(): JSX.Element {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex w-full flex-col h-screen bg-gray-100">
       <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
-        <div className="w-full max-w-4xl h-full flex flex-col">
-          <div className="flex-grow overflow-auto space-y-4 min-h-[50vh]">
+        <div className="max-w-4xl h-full flex flex-col">
+          <div className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]">
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`p-3 rounded-lg w-full ${
+                className={`p-3 rounded-lg ${
                   message.role === 'user'
-                    ? 'bg-black text-white'
-                    : 'bg-white text-black border border-gray-200'
+                    ? 'bg-black text-white self-end'
+                    : 'bg-white text-black border border-gray-200 self-start'
                 }`}
               >
                 {message.content}
