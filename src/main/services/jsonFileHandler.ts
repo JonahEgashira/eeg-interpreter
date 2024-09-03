@@ -1,33 +1,63 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { Conversation, Message } from '@shared/types/chat'
+import { Conversation, ConversationJSON, Message } from '@shared/types/chat'
 import { app } from 'electron'
 
-const filePath = path.join(app.getPath('userData'), 'conversation.json')
+const conversationDir = path.join(app.getPath('userData'), 'conversations')
 
-export function saveConversationFile(conversation: Conversation): void {
+if (!fs.existsSync(conversationDir)) {
+  fs.mkdirSync(conversationDir, { recursive: true })
+}
+
+export function saveConversation(conversation: Conversation): void {
+  const fileName = `${conversation.id}.json`
+  const filePath = path.join(conversationDir, fileName)
   const jsonString = JSON.stringify(conversation.toJSON(), null, 2)
   fs.writeFileSync(filePath, jsonString)
 }
 
-export function loadConversationFromFile(): Conversation | null {
-  if (!fs.existsSync(filePath)) {
-    return null
-  }
+export function loadConversation(id: string): Conversation | null {
+  const filePath = path.join(conversationDir, `${id}.json`)
+  if (!fs.existsSync(filePath)) return null
 
   const jsonString = fs.readFileSync(filePath, 'utf-8')
   const json = JSON.parse(jsonString)
   return Conversation.fromJSON(json)
 }
 
-export function appendMessageToFile(message: Message): void {
-  const conversation = loadConversationFromFile()
+export function createNewConversation(title: string = 'New Conversation'): Conversation {
+  const newConversation = new Conversation(null, title)
+  saveConversation(newConversation)
+  return newConversation
+}
 
+export function appendMessage(conversationId: string, message: Message): void {
+  const conversation = loadConversation(conversationId)
   if (conversation) {
     conversation.addMessage(message)
-    saveConversationFile(conversation)
+    saveConversation(conversation)
   } else {
-    const newConversation = new Conversation('My Conversation', [message])
-    saveConversationFile(newConversation)
+    console.error(`Conversation with id ${conversationId} not found`)
+  }
+}
+
+export function listConversations(): Conversation[] {
+  const files = fs.readdirSync(conversationDir)
+  return files
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => {
+      const filePath = path.join(conversationDir, file)
+      const jsonString = fs.readFileSync(filePath, 'utf-8')
+      const json = JSON.parse(jsonString) as ConversationJSON
+      return Conversation.fromJSON(json)
+    })
+}
+
+export function deleteConversation(id: string): void {
+  const filePath = path.join(conversationDir, `${id}.json`)
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath)
+  } else {
+    console.error(`Conversation file with id ${id} not found`)
   }
 }
