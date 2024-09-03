@@ -1,15 +1,18 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
-import { generateResponse, InputSchema } from '@renderer/lib/chat/llm'
+import { streamText } from 'ai'
 import { Message } from '@shared/types/chat'
-import { getEnvVar } from './lib/ipcFunctions'
+import { appendMessage, getEnvVar } from './lib/ipcFunctions'
 import { Send } from 'lucide-react'
+import { createOpenAI } from '@ai-sdk/openai'
+import { InputSchema } from './lib/chat/inputSchema'
 
 function App(): JSX.Element {
   const [input, setInput] = React.useState<string>('')
   const [messages, setMessages] = React.useState<Message[]>([])
   const [isComposing, setIsComposing] = React.useState(false)
   const [openaiApiKey, setOpenaiApiKey] = React.useState<string | null>(null)
+  const [isStreaming, setIsStreaming] = React.useState(false)
 
   React.useEffect(() => {
     const fetchOpenaiApiKey = async () => {
@@ -32,12 +35,35 @@ function App(): JSX.Element {
       const newUserMessage: Message = { role: 'user', content: parsedUserMessage.input }
       setMessages((prevMessages) => [...prevMessages, newUserMessage])
       setInput('')
+      setIsStreaming(true)
 
-      const aiResponse = await generateResponse([...messages, newUserMessage], openaiApiKey)
-      const newAIMessage: Message = { role: 'assistant', content: aiResponse }
+      const openai = createOpenAI({ apiKey: openaiApiKey })
+
+      const result = await streamText({
+        model: openai('gpt-4o-mini'),
+        system: 'You are a helpful assistant.',
+        messages: [...messages, newUserMessage]
+      })
+
+      let fullResponse = ''
+      const newAIMessage: Message = { role: 'assistant', content: '' }
       setMessages((prevMessages) => [...prevMessages, newAIMessage])
+
+      for await (const delta of result.textStream) {
+        fullResponse += delta
+        setMessages((prevMessages) => {
+          const updatedMessages = [...prevMessages]
+          updatedMessages[updatedMessages.length - 1].content = fullResponse
+          return updatedMessages
+        })
+      }
+
+      setIsStreaming(false)
+      appendMessage(newUserMessage)
+      appendMessage({ ...newAIMessage, content: fullResponse })
     } catch (error) {
       console.error('Error processing input:', error)
+      setIsStreaming(false)
     }
   }
 
@@ -71,6 +97,9 @@ function App(): JSX.Element {
                 }`}
               >
                 {message.content}
+                {message.role === 'assistant' && isStreaming && index === messages.length - 1 && (
+                  <span className="text-gray-500 animate-pulse">...</span>
+                )}
               </div>
             ))}
           </div>
@@ -90,11 +119,12 @@ function App(): JSX.Element {
               minRows={1}
               maxRows={3}
               autoFocus
+              disabled={isStreaming}
             />
             <button
               onClick={handleSendMessage}
               className="p-2 bg-black text-white rounded-md disabled:opacity-50 hover:bg-gray-800 transition-colors"
-              disabled={!input.trim() || !openaiApiKey}
+              disabled={!input.trim() || !openaiApiKey || isStreaming}
             >
               <Send size={20} />
             </button>
