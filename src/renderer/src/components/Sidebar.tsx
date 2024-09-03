@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 
 interface SidebarProps {
   conversations: Conversation[]
-  currentConversationId: string | null
+  currentConversationId: string | undefined
   onNewConversation: () => void
   onLoadConversation: (id: string) => void
 }

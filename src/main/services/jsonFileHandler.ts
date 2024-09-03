@@ -9,11 +9,18 @@ if (!fs.existsSync(conversationDir)) {
   fs.mkdirSync(conversationDir, { recursive: true })
 }
 
-export function saveConversation(conversation: Conversation): void {
+function saveConversation(conversation: Conversation): void {
   const fileName = `${conversation.id}.json`
   const filePath = path.join(conversationDir, fileName)
-  const jsonString = JSON.stringify(conversation.toJSON(), null, 2)
-  fs.writeFileSync(filePath, jsonString)
+
+  const jsonConversation = conversation.toJSON()
+
+  const jsonString = JSON.stringify(jsonConversation, null, 2)
+  try {
+    fs.writeFileSync(filePath, jsonString)
+  } catch (error) {
+    console.error(`Error saving conversation ${conversation.id}:`, error)
+  }
 }
 
 export function loadConversation(id: string): Conversation | null {

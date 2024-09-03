@@ -21,18 +21,6 @@ export async function getEnvVar(key: string): Promise<string | null> {
   }
 }
 
-export async function saveConversation(
-  conversation: Conversation
-): Promise<{ success: boolean; error?: CustomError }> {
-  try {
-    const result = await window.api.saveConversation(conversation)
-    return result
-  } catch (error) {
-    console.error('Error saving conversation:', error)
-    return { success: false, error: { message: (error as Error).message } }
-  }
-}
-
 export async function loadConversation(
   id: string
 ): Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }> {

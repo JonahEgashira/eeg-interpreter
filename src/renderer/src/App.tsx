@@ -8,7 +8,6 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { InputSchema } from './lib/chat/inputSchema'
 import Sidebar from './components/Sidebar'
 import {
-  saveConversation,
   loadConversation,
   createNewConversation,
   appendMessage,
@@ -100,7 +99,6 @@ const App = (): JSX.Element => {
             ...prev.messages,
             newUserMessage
           ])
-          saveConversation(updatedConversation)
           return updatedConversation
         }
         return prev
@@ -131,7 +129,6 @@ const App = (): JSX.Element => {
               updatedMessages.push({ ...newAIMessage, content: fullResponse })
             }
             const updatedConversation = new Conversation(prev.id, prev.title, updatedMessages)
-            saveConversation(updatedConversation)
             return updatedConversation
           }
           return prev

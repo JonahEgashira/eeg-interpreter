@@ -1,14 +1,13 @@
 import { ipcMain } from 'electron'
 import { runPythonCode } from './pythonHandler'
 import {
-  saveConversation,
   loadConversation,
   appendMessage,
   createNewConversation,
   listConversations,
   deleteConversation
 } from './jsonFileHandler'
-import { Conversation, Message } from '@shared/types/chat'
+import { Message } from '@shared/types/chat'
 import * as dotenv from 'dotenv'
 
 dotenv.config()
@@ -29,16 +28,6 @@ export function setupIpcHandlers(): void {
       return process.env[key]
     }
     return null
-  })
-
-  ipcMain.handle('save-conversation', (_, conversation: Conversation) => {
-    try {
-      saveConversation(conversation)
-      return { success: true }
-    } catch (error) {
-      console.error('Error saving conversation:', error)
-      return { success: false, error }
-    }
   })
 
   ipcMain.handle('load-conversation', (_, id: string) => {
