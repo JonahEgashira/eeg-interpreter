@@ -41,6 +41,12 @@ const App = (): JSX.Element => {
     textareaRef.current?.focus()
   }, [currentConversation])
 
+  React.useEffect(() => {
+    if (conversations.length === 0) {
+      handleNewConversation()
+    }
+  }, [conversations])
+
   const loadConversations = async () => {
     try {
       const result = await listConversations()
