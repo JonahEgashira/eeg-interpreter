@@ -19,6 +19,7 @@ const App = (): JSX.Element => {
   const [isStreaming, setIsStreaming] = React.useState(false)
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const messageAreaRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
     const fetchOpenaiApiKey = async () => {
@@ -33,6 +34,12 @@ const App = (): JSX.Element => {
     fetchOpenaiApiKey()
     loadConversations()
   }, [])
+
+  React.useEffect(() => {
+    if (messageAreaRef.current) {
+      messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight
+    }
+  }, [currentConversation?.messages])
 
   React.useEffect(() => {
     textareaRef.current?.focus()
@@ -184,7 +191,10 @@ const App = (): JSX.Element => {
       <div className="flex flex-col flex-grow">
         <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
           <div className="max-w-4xl w-full h-full flex flex-col">
-            <div className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]">
+            <div
+              ref={messageAreaRef}
+              className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]"
+            >
               {currentConversation?.messages.map((message, index) => (
                 <div key={index} className="flex justify-center">
                   <div
