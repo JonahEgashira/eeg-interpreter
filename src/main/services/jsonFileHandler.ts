@@ -9,7 +9,7 @@ if (!fs.existsSync(conversationDir)) {
   fs.mkdirSync(conversationDir, { recursive: true })
 }
 
-function saveConversation(conversation: Conversation): void {
+export function saveConversation(conversation: Conversation): void {
   const fileName = `${conversation.id}.json`
   const filePath = path.join(conversationDir, fileName)
 
@@ -32,7 +32,7 @@ export function loadConversation(id: string): Conversation | null {
   return Conversation.fromJSON(json)
 }
 
-export function createNewConversation(title: string = 'New Conversation'): Conversation {
+export function createNewConversation(title: string | null = null): Conversation {
   const newConversation = new Conversation(null, title)
   saveConversation(newConversation)
   return newConversation

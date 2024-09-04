@@ -33,6 +33,7 @@ const App = (): JSX.Element => {
         console.error('Error fetching OpenAI API key:', error)
       }
     }
+
     fetchOpenaiApiKey()
     loadConversations()
   }, [])
@@ -41,20 +42,11 @@ const App = (): JSX.Element => {
     textareaRef.current?.focus()
   }, [currentConversation])
 
-  React.useEffect(() => {
-    if (conversations.length === 0) {
-      handleNewConversation()
-    }
-  }, [conversations])
-
   const loadConversations = async () => {
     try {
       const result = await listConversations()
       if (result.success && result.conversations) {
         setConversations(result.conversations)
-        if (result.conversations.length > 0) {
-          setCurrentConversation(result.conversations[0])
-        }
       } else {
         console.error('Failed to load conversations:', result.error)
       }
@@ -64,8 +56,9 @@ const App = (): JSX.Element => {
   }
 
   const handleNewConversation = async () => {
+    console.log('called')
     try {
-      const result = await createNewConversation()
+      const result = await createNewConversation(null)
       if (result.success && result.conversation) {
         setConversations([...conversations, result.conversation])
         setCurrentConversation(result.conversation)

@@ -8,13 +8,18 @@ const api = {
 
   getEnvVar: (key: string): Promise<string | null> => ipcRenderer.invoke('get-env-vars', key),
 
+  saveConversation: (
+    conversation: Conversation
+  ): Promise<{ success: boolean; error?: CustomError }> =>
+    ipcRenderer.invoke('save-conversation', conversation),
+
   loadConversation: (
     id: string
   ): Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }> =>
     ipcRenderer.invoke('load-conversation', id),
 
   createNewConversation: (
-    title?: string
+    title: string | null
   ): Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }> =>
     ipcRenderer.invoke('create-new-conversation', title),
 

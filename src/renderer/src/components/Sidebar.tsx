@@ -15,24 +15,25 @@ const Sidebar = ({
   onLoadConversation
 }: SidebarProps): JSX.Element => {
   return (
-    <div className="w-64 bg-gray-800 text-white p-4 flex flex-col">
+    <div className="w-64 bg-gray-100 text-gray-800 p-4 flex flex-col border-r border-gray-300">
       <button
         onClick={onNewConversation}
-        className="mb-4 flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        className="mb-4 flex items-center justify-center space-x-2 bg-white hover:bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded border border-gray-300 transition-colors duration-200"
       >
         <Plus size={20} />
-        <span>New Conversation</span>
       </button>
       <div className="flex-grow overflow-auto">
         {conversations.map((conversation) => (
           <div
             key={conversation.id}
-            className={`p-2 mb-2 rounded cursor-pointer ${
-              conversation.id === currentConversationId ? 'bg-gray-700' : 'hover:bg-gray-700'
+            className={`p-2 mb-2 rounded cursor-pointer transition-colors duration-200 ${
+              conversation.id === currentConversationId
+                ? 'bg-gray-300 text-gray-900'
+                : 'hover:bg-gray-200 text-gray-700'
             }`}
             onClick={() => onLoadConversation(conversation.id)}
           >
-            {conversation.title}
+            {conversation.title || 'New Conversation'}
           </div>
         ))}
       </div>

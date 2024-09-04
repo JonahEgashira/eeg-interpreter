@@ -5,11 +5,14 @@ import { CustomError } from '@shared/types/errors'
 interface CustomAPI {
   runPythonCode: (code: string) => Promise<string>
   getEnvVar: (key: string) => Promise<string | null>
+  saveConversation: (
+    conversation: Conversation
+  ) => Promise<{ success: boolean; error?: CustomError }>
   loadConversation: (
     id: string
   ) => Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }>
   createNewConversation: (
-    title?: string
+    title: string | null
   ) => Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }>
   appendMessage: (
     conversationId: string,

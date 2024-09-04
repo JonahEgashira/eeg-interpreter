@@ -7,7 +7,7 @@ export interface Message {
 
 export interface ConversationJSON {
   id: string
-  title: string
+  title: string | null
   messages: Message[]
   createdAt: string
   updatedAt: string
@@ -15,12 +15,12 @@ export interface ConversationJSON {
 
 export class Conversation {
   id: string
-  title: string
+  title: string | null
   messages: Message[]
   createdAt: Date
   updatedAt: Date
 
-  constructor(id: string | null, title: string, messages: Message[] = []) {
+  constructor(id: string | null, title: string | null, messages: Message[] = []) {
     this.id = id || uuidv4()
     this.title = title
     this.messages = messages
