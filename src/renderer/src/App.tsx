@@ -1,18 +1,14 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
-import { streamText } from 'ai'
+import { streamText, generateText } from 'ai'
 import { Message, Conversation } from '@shared/types/chat'
-import { getEnvVar } from './lib/ipcFunctions'
+import { getEnvVar, saveConversation } from './lib/ipcFunctions'
 import { Send } from 'lucide-react'
 import { createOpenAI } from '@ai-sdk/openai'
 import { InputSchema } from './lib/chat/inputSchema'
 import Sidebar from './components/Sidebar'
-import {
-  loadConversation,
-  createNewConversation,
-  appendMessage,
-  listConversations
-} from './lib/ipcFunctions'
+import { addMessage } from '@shared/types/chat'
+import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
 
 const App = (): JSX.Element => {
   const [input, setInput] = React.useState<string>('')
@@ -56,18 +52,8 @@ const App = (): JSX.Element => {
   }
 
   const handleNewConversation = async () => {
-    console.log('called')
-    try {
-      const result = await createNewConversation(null)
-      if (result.success && result.conversation) {
-        setConversations([...conversations, result.conversation])
-        setCurrentConversation(result.conversation)
-      } else {
-        console.error('Failed to create new conversation:', result.error)
-      }
-    } catch (error) {
-      console.error('Error creating new conversation:', error)
-    }
+    setCurrentConversation(null)
+    setInput('')
   }
 
   const handleLoadConversation = async (id: string) => {
@@ -84,7 +70,6 @@ const App = (): JSX.Element => {
   }
 
   const handleSendMessage = async () => {
-    if (!currentConversation) return
     const userMessage = input.trim()
     if (!userMessage || !openaiApiKey) return
 
@@ -92,26 +77,36 @@ const App = (): JSX.Element => {
       const parsedUserMessage = InputSchema.parse({ input: userMessage })
       const newUserMessage: Message = { role: 'user', content: parsedUserMessage.input }
 
-      setCurrentConversation((prev) => {
-        if (prev) {
-          const updatedConversation = new Conversation(prev.id, prev.title, [
-            ...prev.messages,
-            newUserMessage
-          ])
-          return updatedConversation
-        }
-        return prev
-      })
+      const openai = createOpenAI({ apiKey: openaiApiKey })
 
+      let updatedConversation: Conversation
+
+      if (!currentConversation) {
+        const generatedTitle = await generateText({
+          model: openai('gpt-4o-mini'),
+          prompt: `Please generate a short, concise title for the following conversation:\n\n${parsedUserMessage.input}`
+        })
+
+        const result = await createNewConversation(generatedTitle.text)
+
+        if (!result.success || !result.conversation) {
+          throw new Error('Failed to create new conversation')
+        }
+        updatedConversation = result.conversation
+      } else {
+        updatedConversation = { ...currentConversation }
+      }
+
+      updatedConversation = addMessage(updatedConversation, newUserMessage)
+
+      setCurrentConversation(updatedConversation)
       setInput('')
       setIsStreaming(true)
-
-      const openai = createOpenAI({ apiKey: openaiApiKey })
 
       const result = await streamText({
         model: openai('gpt-4o-mini'),
         system: 'You are a helpful assistant.',
-        messages: [...currentConversation.messages, newUserMessage]
+        messages: updatedConversation.messages
       })
 
       let fullResponse = ''
@@ -127,18 +122,32 @@ const App = (): JSX.Element => {
             } else {
               updatedMessages.push({ ...newAIMessage, content: fullResponse })
             }
-            const updatedConversation = new Conversation(prev.id, prev.title, updatedMessages)
-            return updatedConversation
+            return { ...prev, messages: updatedMessages, updatedAt: new Date() }
           }
           return prev
         })
       }
 
       setIsStreaming(false)
-      appendMessage(currentConversation.id, newUserMessage)
-      appendMessage(currentConversation.id, {
+
+      updatedConversation = addMessage(updatedConversation, {
         ...newAIMessage,
         content: fullResponse
+      })
+
+      await saveConversation(updatedConversation)
+
+      setConversations((prevConversations) => {
+        const existingIndex = prevConversations.findIndex((c) => c.id === updatedConversation.id)
+        if (existingIndex !== -1) {
+          return [
+            updatedConversation,
+            ...prevConversations.slice(0, existingIndex),
+            ...prevConversations.slice(existingIndex + 1)
+          ]
+        } else {
+          return [updatedConversation, ...prevConversations]
+        }
       })
 
       textareaRef.current?.focus()
@@ -216,7 +225,7 @@ const App = (): JSX.Element => {
               <button
                 onClick={handleSendMessage}
                 className="p-2 bg-black text-white rounded-md disabled:opacity-50 hover:bg-gray-800 transition-colors"
-                disabled={!input.trim() || !openaiApiKey || isStreaming || !currentConversation}
+                disabled={!input.trim() || !openaiApiKey || isStreaming}
               >
                 <Send size={20} />
               </button>

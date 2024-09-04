@@ -1,6 +1,14 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { Conversation, ConversationJSON, Message } from '@shared/types/chat'
+import {
+  Conversation,
+  ConversationJSON,
+  Message,
+  conversationFromJSON,
+  conversationToJSON,
+  createConversation,
+  addMessage
+} from '@shared/types/chat'
 import { app } from 'electron'
 
 const conversationDir = path.join(app.getPath('userData'), 'conversations')
@@ -13,7 +21,7 @@ export function saveConversation(conversation: Conversation): void {
   const fileName = `${conversation.id}.json`
   const filePath = path.join(conversationDir, fileName)
 
-  const jsonConversation = conversation.toJSON()
+  const jsonConversation = conversationToJSON(conversation)
 
   const jsonString = JSON.stringify(jsonConversation, null, 2)
   try {
@@ -29,11 +37,12 @@ export function loadConversation(id: string): Conversation | null {
 
   const jsonString = fs.readFileSync(filePath, 'utf-8')
   const json = JSON.parse(jsonString)
-  return Conversation.fromJSON(json)
+  const conversation = conversationFromJSON(json)
+  return conversation
 }
 
 export function createNewConversation(title: string | null = null): Conversation {
-  const newConversation = new Conversation(null, title)
+  const newConversation = createConversation(null, title)
   saveConversation(newConversation)
   return newConversation
 }
@@ -41,8 +50,8 @@ export function createNewConversation(title: string | null = null): Conversation
 export function appendMessage(conversationId: string, message: Message): void {
   const conversation = loadConversation(conversationId)
   if (conversation) {
-    conversation.addMessage(message)
-    saveConversation(conversation)
+    const updatedConversation = addMessage(conversation, message)
+    saveConversation(updatedConversation)
   } else {
     console.error(`Conversation with id ${conversationId} not found`)
   }
@@ -56,7 +65,7 @@ export function listConversations(): Conversation[] {
       const filePath = path.join(conversationDir, file)
       const jsonString = fs.readFileSync(filePath, 'utf-8')
       const json = JSON.parse(jsonString) as ConversationJSON
-      return Conversation.fromJSON(json)
+      return conversationFromJSON(json)
     })
 }
 

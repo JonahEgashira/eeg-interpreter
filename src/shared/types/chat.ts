@@ -5,48 +5,53 @@ export interface Message {
   content: string
 }
 
-export interface ConversationJSON {
-  id: string
-  title: string | null
-  messages: Message[]
-  createdAt: string
-  updatedAt: string
-}
-
-export class Conversation {
+export interface Conversation {
   id: string
   title: string | null
   messages: Message[]
   createdAt: Date
   updatedAt: Date
+}
 
-  constructor(id: string | null, title: string | null, messages: Message[] = []) {
-    this.id = id || uuidv4()
-    this.title = title
-    this.messages = messages
-    this.createdAt = new Date()
-    this.updatedAt = new Date()
+export type ConversationJSON = Omit<Conversation, 'createdAt' | 'updatedAt'> & {
+  createdAt: string
+  updatedAt: string
+}
+
+export function createConversation(
+  id: string | null = null,
+  title: string | null = null,
+  messages: Message[] = []
+): Conversation {
+  return {
+    id: id || uuidv4(),
+    title,
+    messages,
+    createdAt: new Date(),
+    updatedAt: new Date()
   }
+}
 
-  addMessage(message: Message): void {
-    this.messages.push(message)
-    this.updatedAt = new Date()
+export function addMessage(conversation: Conversation, message: Message): Conversation {
+  return {
+    ...conversation,
+    messages: [...conversation.messages, message],
+    updatedAt: new Date()
   }
+}
 
-  toJSON(): ConversationJSON {
-    return {
-      id: this.id,
-      title: this.title,
-      messages: this.messages,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString()
-    }
+export function conversationToJSON(conversation: Conversation): ConversationJSON {
+  return {
+    ...conversation,
+    createdAt: conversation.createdAt.toISOString(),
+    updatedAt: conversation.updatedAt.toISOString()
   }
+}
 
-  static fromJSON(json: ConversationJSON): Conversation {
-    const conv = new Conversation(json.id, json.title, json.messages)
-    conv.createdAt = new Date(json.createdAt)
-    conv.updatedAt = new Date(json.updatedAt)
-    return conv
+export function conversationFromJSON(json: ConversationJSON): Conversation {
+  return {
+    ...json,
+    createdAt: new Date(json.createdAt),
+    updatedAt: new Date(json.updatedAt)
   }
 }
