@@ -1,20 +1,18 @@
 import * as React from 'react'
-import Textarea from 'react-textarea-autosize'
 import { streamText, generateText } from 'ai'
 import { Message, Conversation } from '@shared/types/chat'
 import { getEnvVar, saveConversation } from './lib/ipcFunctions'
-import { Send } from 'lucide-react'
 import { createOpenAI } from '@ai-sdk/openai'
 import { InputSchema } from './lib/chat/inputSchema'
 import Sidebar from './components/Sidebar'
 import { addMessage } from '@shared/types/chat'
 import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
+import ChatInterface from './components/ChatInterface'
 
 const App = (): JSX.Element => {
   const [input, setInput] = React.useState<string>('')
   const [conversations, setConversations] = React.useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = React.useState<Conversation | null>(null)
-  const [isComposing, setIsComposing] = React.useState(false)
   const [openaiApiKey, setOpenaiApiKey] = React.useState<string | null>(null)
   const [isStreaming, setIsStreaming] = React.useState(false)
 
@@ -94,7 +92,9 @@ const App = (): JSX.Element => {
           prompt: `Please generate a short, concise title for the following conversation:\n\n${parsedUserMessage.input}`
         })
 
-        const result = await createNewConversation(generatedTitle.text)
+        const cleanTitle = generatedTitle.text.replace(/^["']|["']$/g, '').trim()
+
+        const result = await createNewConversation(cleanTitle)
 
         if (!result.success || !result.conversation) {
           throw new Error('Failed to create new conversation')
@@ -165,21 +165,6 @@ const App = (): JSX.Element => {
     }
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey && !isComposing) {
-      event.preventDefault()
-      handleSendMessage()
-    }
-  }
-
-  const handleCompositionStart = () => {
-    setIsComposing(true)
-  }
-
-  const handleCompositionEnd = () => {
-    setIsComposing(false)
-  }
-
   return (
     <div className="flex w-full h-screen bg-gray-100">
       <Sidebar
@@ -188,61 +173,14 @@ const App = (): JSX.Element => {
         onNewConversation={handleNewConversation}
         onLoadConversation={handleLoadConversation}
       />
-      <div className="flex flex-col flex-grow">
-        <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
-          <div className="max-w-4xl w-full h-full flex flex-col">
-            <div
-              ref={messageAreaRef}
-              className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]"
-            >
-              {currentConversation?.messages.map((message, index) => (
-                <div key={index} className="flex justify-center">
-                  <div
-                    className={`p-3 rounded-lg w-4/5 ${
-                      message.role === 'user'
-                        ? 'bg-black text-white'
-                        : 'bg-white text-black border border-gray-200'
-                    }`}
-                  >
-                    {message.content}
-                    {message.role === 'assistant' &&
-                      isStreaming &&
-                      index === currentConversation.messages.length - 1 && (
-                        <span className="text-gray-500 animate-pulse">...</span>
-                      )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="p-4 bg-white border-t border-gray-200">
-          <div className="max-w-4xl mx-auto w-full">
-            <div className="flex items-center space-x-2">
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onCompositionStart={handleCompositionStart}
-                onCompositionEnd={handleCompositionEnd}
-                placeholder="Type your message..."
-                className="flex-grow p-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-black"
-                minRows={1}
-                maxRows={3}
-                autoFocus
-              />
-              <button
-                onClick={handleSendMessage}
-                className="p-2 bg-black text-white rounded-md disabled:opacity-50 hover:bg-gray-800 transition-colors"
-                disabled={!input.trim() || !openaiApiKey || isStreaming}
-              >
-                <Send size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ChatInterface
+        currentConversation={currentConversation}
+        input={input}
+        setInput={setInput}
+        handleSendMessage={handleSendMessage}
+        isStreaming={isStreaming}
+        openaiApiKey={openaiApiKey}
+      />
     </div>
   )
 }
