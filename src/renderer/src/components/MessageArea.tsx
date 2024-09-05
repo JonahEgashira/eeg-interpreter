@@ -1,10 +1,11 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Message } from '@shared/types/chat'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
+import { runPythonCode } from '@renderer/lib/ipcFunctions'
 
 interface MessageAreaProps {
   messages: Message[]
@@ -13,12 +14,28 @@ interface MessageAreaProps {
 
 const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
   const messageAreaRef = useRef<HTMLDivElement>(null)
+  const [pythonResult, setPythonResult] = useState<{ [key: number]: string }>({})
 
   useEffect(() => {
     if (messageAreaRef.current) {
       messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight
     }
   }, [messages])
+
+  const handleRunPython = async (code: string, index: number) => {
+    try {
+      const result = await runPythonCode(code)
+      setPythonResult((prevResults) => ({
+        ...prevResults,
+        [index]: result
+      }))
+    } catch (error) {
+      setPythonResult((prevResults) => ({
+        ...prevResults,
+        [index]: 'Error running code'
+      }))
+    }
+  }
 
   return (
     <div ref={messageAreaRef} className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]">
@@ -35,33 +52,33 @@ const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
               rehypePlugins={[rehypeRaw]}
               remarkPlugins={[remarkGfm]}
               components={{
-                code({ className, children, ...props }) {
-                  console.log('message.content', message.content)
+                code({ className, children }) {
                   const match = /language-(\w+)/.exec(className || '')
-
                   const codeContent = String(children).replace(/\n$/, '')
 
-                  if (!className?.includes('inline') && match) {
-                    if (codeContent.trim() === '') {
-                      return <div className="h-4"></div>
-                    }
-                    return (
-                      <SyntaxHighlighter
-                        style={oneDark}
-                        language={match[1]}
-                        className={message.role === 'user' ? 'bg-gray-800' : ''}
-                      >
+                  return (
+                    <div>
+                      {match && match[1] === 'python' && (
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-bold">Python Code:</span>
+                          <button
+                            onClick={() => handleRunPython(codeContent, index)}
+                            className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
+                          >
+                            Run
+                          </button>
+                        </div>
+                      )}
+                      <SyntaxHighlighter style={oneDark} language={match ? match[1] : ''}>
                         {codeContent}
                       </SyntaxHighlighter>
-                    )
-                  }
-                  return (
-                    <code
-                      className={`px-1 rounded ${message.role === 'user' ? 'bg-gray-700' : 'bg-gray-200'}`}
-                      {...props}
-                    >
-                      {children}
-                    </code>
+                      {match && match[1] === 'python' && pythonResult[index] && (
+                        <div className="mt-2 p-2 bg-gray-100 rounded">
+                          <strong>Result:</strong>
+                          <pre className="whitespace-pre-wrap">{pythonResult[index]}</pre>
+                        </div>
+                      )}
+                    </div>
                   )
                 }
               }}
