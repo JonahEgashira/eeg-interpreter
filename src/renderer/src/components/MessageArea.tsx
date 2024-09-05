@@ -17,10 +17,10 @@ const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
   const [pythonResult, setPythonResult] = useState<{ [key: number]: string }>({})
 
   useEffect(() => {
-    if (messageAreaRef.current) {
+    if (isStreaming && messageAreaRef.current) {
       messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight
     }
-  }, [messages])
+  }, [isStreaming, messages])
 
   const handleRunPython = async (code: string, index: number) => {
     try {
