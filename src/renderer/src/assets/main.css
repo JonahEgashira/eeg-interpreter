@@ -6,7 +6,6 @@ body {
   justify-content: center;
   overflow: hidden;
   background-size: cover;
-  user-select: none;
 }
 
 code {
