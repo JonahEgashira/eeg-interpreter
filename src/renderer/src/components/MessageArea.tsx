@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react'
 import { Message } from '@shared/types/chat'
 import ReactMarkdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 
 interface MessageAreaProps {
   messages: Message[]
@@ -32,15 +33,33 @@ const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
           >
             <ReactMarkdown
               rehypePlugins={[rehypeRaw]}
+              remarkPlugins={[remarkGfm]}
               components={{
                 code({ className, children, ...props }) {
+                  console.log('message.content', message.content)
                   const match = /language-(\w+)/.exec(className || '')
-                  return !className?.includes('inline') && match ? (
-                    <SyntaxHighlighter style={oneDark} language={match[1]}>
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  ) : (
-                    <code className={className} {...props}>
+
+                  const codeContent = String(children).replace(/\n$/, '')
+
+                  if (!className?.includes('inline') && match) {
+                    if (codeContent.trim() === '') {
+                      return <div className="h-4"></div>
+                    }
+                    return (
+                      <SyntaxHighlighter
+                        style={oneDark}
+                        language={match[1]}
+                        className={message.role === 'user' ? 'bg-gray-800' : ''}
+                      >
+                        {codeContent}
+                      </SyntaxHighlighter>
+                    )
+                  }
+                  return (
+                    <code
+                      className={`px-1 rounded ${message.role === 'user' ? 'bg-gray-700' : 'bg-gray-200'}`}
+                      {...props}
+                    >
                       {children}
                     </code>
                   )
