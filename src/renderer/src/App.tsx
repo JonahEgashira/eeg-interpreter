@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar'
 import { addMessage } from '@shared/types/chat'
 import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
 import ChatInterface from './components/ChatInterface'
+import { prompts, replacePlaceholders } from './lib/config/prompts'
 
 const App = (): JSX.Element => {
   const [input, setInput] = React.useState<string>('')
@@ -87,9 +88,12 @@ const App = (): JSX.Element => {
       let updatedConversation: Conversation
 
       if (!currentConversation) {
+        const titleGenerationPrompt = replacePlaceholders(prompts.titleGeneration, {
+          input: parsedUserMessage.input
+        })
         const generatedTitle = await generateText({
           model: openai('gpt-4o-mini'),
-          prompt: `Please generate a short, concise title for the following conversation:\n\n${parsedUserMessage.input}`
+          prompt: titleGenerationPrompt
         })
 
         const cleanTitle = generatedTitle.text.replace(/^["']|["']$/g, '').trim()
@@ -110,9 +114,11 @@ const App = (): JSX.Element => {
       setInput('')
       setIsStreaming(true)
 
+      const systemPrompt = prompts.system
+
       const result = await streamText({
         model: openai('gpt-4o-mini'),
-        system: 'You are a helpful assistant.',
+        system: systemPrompt,
         messages: updatedConversation.messages
       })
 
