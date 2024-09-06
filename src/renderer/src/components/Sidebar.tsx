@@ -14,6 +14,10 @@ const Sidebar = ({
   onNewConversation,
   onLoadConversation
 }: SidebarProps): JSX.Element => {
+  const sortedConversations = conversations.sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  )
+
   return (
     <div className="w-64 bg-gray-100 text-gray-800 p-4 flex flex-col border-r border-gray-300">
       <button
@@ -23,7 +27,7 @@ const Sidebar = ({
         <Plus size={20} />
       </button>
       <div className="flex-grow overflow-auto">
-        {conversations.map((conversation) => (
+        {sortedConversations.map((conversation) => (
           <div
             key={conversation.id}
             className={`p-2 mb-2 rounded cursor-pointer transition-colors duration-200 ${
