@@ -13,9 +13,10 @@ interface MessageAreaProps {
   isStreaming: boolean
 }
 
-const CodeBlock: React.FC<{ code: string; language: string; index: number }> = ({
+const CodeBlock: React.FC<{ code: string; language: string; inline: boolean; index: number }> = ({
   code,
-  language
+  language,
+  inline
 }) => {
   const [result, setResult] = useState<string | null>(null)
 
@@ -26,6 +27,10 @@ const CodeBlock: React.FC<{ code: string; language: string; index: number }> = (
     } catch (error) {
       setResult('Error running code')
     }
+  }
+
+  if (inline) {
+    return <code className="bg-gray-200 rounded px-1 py-0.5 text-sm">{code}</code>
   }
 
   return (
@@ -75,12 +80,21 @@ const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
               rehypePlugins={[rehypeRaw]}
               remarkPlugins={[remarkGfm]}
               components={{
-                code({ className, children }) {
+                code({ className, children, ...rest }) {
                   const match = /language-(\w+)/.exec(className || '')
                   const codeContent = String(children).replace(/\n$/, '')
                   const language = match ? match[1] : ''
+                  const inline = !className
 
-                  return <CodeBlock code={codeContent} language={language} index={index} />
+                  return (
+                    <CodeBlock
+                      code={codeContent}
+                      language={language}
+                      inline={inline}
+                      index={index}
+                      {...rest}
+                    />
+                  )
                 }
               }}
             >
