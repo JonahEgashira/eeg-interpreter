@@ -2,10 +2,11 @@ import React, { useRef, useEffect, useState } from 'react'
 import { Message } from '@shared/types/chat'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
+import { Play } from 'lucide-react'
 
 interface MessageAreaProps {
   messages: Message[]
@@ -44,7 +45,7 @@ const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
           <div
             className={`p-3 rounded-lg w-4/5 ${
               message.role === 'user'
-                ? 'bg-black text-white'
+                ? 'bg-gray-700 text-white'
                 : 'bg-white text-black border border-gray-200'
             }`}
           >
@@ -59,17 +60,17 @@ const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
                   return (
                     <div>
                       {match && match[1] === 'python' && (
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-bold">Python Code:</span>
+                        <div className="flex justify-between items-center mb-2 mt-6">
+                          <span className="text-sm font-bold">Python</span>
                           <button
                             onClick={() => handleRunPython(codeContent, index)}
                             className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
                           >
-                            Run
+                            <Play size={18} />
                           </button>
                         </div>
                       )}
-                      <SyntaxHighlighter style={oneDark} language={match ? match[1] : ''}>
+                      <SyntaxHighlighter style={oneLight} language={match ? match[1] : ''}>
                         {codeContent}
                       </SyntaxHighlighter>
                       {match && match[1] === 'python' && pythonResult[index] && (
