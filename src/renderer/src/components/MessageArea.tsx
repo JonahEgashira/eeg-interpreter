@@ -30,7 +30,7 @@ const CodeBlock: React.FC<{ code: string; language: string; inline: boolean; ind
   }
 
   if (inline) {
-    return <code className="bg-gray-200 rounded px-1 py-0.5 text-sm">{code}</code>
+    return <code className="bg-gray-400 rounded px-1 py-0.5 text-sm">{code}</code>
   }
 
   return (
