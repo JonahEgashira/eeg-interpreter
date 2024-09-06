@@ -31,6 +31,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "electron-store": "^10.0.0",
+    "js-yaml": "^4.1.0",
     "lucide-react": "^0.428.0",
     "radix-ui": "^1.0.1",
     "react-markdown": "^9.0.1",
