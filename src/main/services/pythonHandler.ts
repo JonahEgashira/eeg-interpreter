@@ -79,6 +79,9 @@ export async function runPythonCode(code: string): Promise<string> {
       future.onIOPub = (msg): void => {
         if (msg.header.msg_type === 'execute_result' || msg.header.msg_type === 'stream') {
           result += (msg.content as { text: string }).text
+        } else if (msg.header.msg_type === 'display_data') {
+          const imageData = (msg.content as { data: { 'image/png': string } }).data['image/png']
+          result += `<img src="data:image/png;base64,${imageData}" alt="Python Output Image" />`
         } else if (msg.header.msg_type === 'error') {
           const errorMsg = (msg.content as { evalue: string }).evalue
           reject(new Error(errorMsg))

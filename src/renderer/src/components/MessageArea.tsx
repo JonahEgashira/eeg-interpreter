@@ -6,7 +6,7 @@ import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
-import { Play } from 'lucide-react'
+import { Play, Download } from 'lucide-react'
 
 interface MessageAreaProps {
   messages: Message[]
@@ -32,10 +32,18 @@ const CodeBlock: React.FC<{ code: string; language: string; inline: boolean; ind
 
   if (inline) {
     return (
-      <code key={index} className="bg-gray-400 rounded px-1 py-0.5 text-sm">
+      <code key={index} className="bg-gray-200 rounded px-1 py-0.5 text-sm">
         {code}
       </code>
     )
+  }
+
+  const getImageDownloadLink = (htmlString: string): string | undefined => {
+    const imgTagMatch = htmlString.match(/<img\s+src="data:image\/png;base64,([^"]+)"\s*.*?>/)
+    if (imgTagMatch && imgTagMatch[1]) {
+      return `data:image/png;base64,${imgTagMatch[1]}`
+    }
+    return undefined
   }
 
   return (
@@ -53,8 +61,19 @@ const CodeBlock: React.FC<{ code: string; language: string; inline: boolean; ind
       </SyntaxHighlighter>
       {language === 'python' && result && (
         <div className="mt-2 p-2 bg-gray-100 rounded">
-          <strong>Result:</strong>
-          <pre className="whitespace-pre-wrap">{result}</pre>
+          <div className="mb-2 flex justify-between items-center">
+            <strong>Result</strong>
+            {getImageDownloadLink(result) && (
+              <a
+                href={getImageDownloadLink(result)}
+                download={`python_output_${index}.png`}
+                className="text-black underline flex items-center"
+              >
+                <Download size={20} />
+              </a>
+            )}
+          </div>
+          <div dangerouslySetInnerHTML={{ __html: result }} />
         </div>
       )}
     </div>
