@@ -12,9 +12,19 @@ import {
 import { app } from 'electron'
 
 const conversationDir = path.join(app.getPath('userData'), 'conversations')
+const filesDir = path.join(app.getPath('userData'), 'files')
+const figuresDir = path.join(app.getPath('userData'), 'figures')
 
 if (!fs.existsSync(conversationDir)) {
   fs.mkdirSync(conversationDir, { recursive: true })
+}
+
+if (!fs.existsSync(filesDir)) {
+  fs.mkdirSync(filesDir, { recursive: true })
+}
+
+if (!fs.existsSync(figuresDir)) {
+  fs.mkdirSync(figuresDir, { recursive: true })
 }
 
 export function saveConversation(conversation: Conversation): void {
