@@ -1,8 +1,16 @@
 import { v4 as uuidv4 } from 'uuid'
 
+export interface ExecutionResult {
+  output?: string
+  figurePaths?: string[]
+  filePaths?: string[]
+  error?: string
+}
+
 export interface Message {
   role: 'user' | 'assistant'
   content: string
+  executionResults?: ExecutionResult[]
 }
 
 export interface Conversation {
