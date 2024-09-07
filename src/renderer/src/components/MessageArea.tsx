@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, memo } from 'react'
 import { Message } from '@shared/types/chat'
 import Markdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -13,12 +13,14 @@ interface MessageAreaProps {
   isStreaming: boolean
 }
 
-const CodeBlock: React.FC<{ code: string; language: string; inline: boolean; index: number }> = ({
-  code,
-  language,
-  inline,
-  index
-}) => {
+interface CodeBlockProps {
+  code: string
+  language: string
+  inline: boolean
+  index: number
+}
+
+const CodeBlock: React.FC<CodeBlockProps> = memo(({ code, language, inline, index }) => {
   const [result, setResult] = useState<string | null>(null)
 
   const handleRun = async () => {
@@ -78,9 +80,11 @@ const CodeBlock: React.FC<{ code: string; language: string; inline: boolean; ind
       )}
     </div>
   )
-}
+})
 
-const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
+CodeBlock.displayName = 'CodeBlock'
+
+const MessageArea: React.FC<MessageAreaProps> = memo(({ messages, isStreaming }) => {
   const messageAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -132,6 +136,8 @@ const MessageArea: React.FC<MessageAreaProps> = ({ messages, isStreaming }) => {
       ))}
     </div>
   )
-}
+})
+
+MessageArea.displayName = 'MessageArea'
 
 export default MessageArea
