@@ -19,7 +19,7 @@ const api = {
     ipcRenderer.invoke('load-conversation', id),
 
   createNewConversation: (
-    title: string | null
+    title: string
   ): Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }> =>
     ipcRenderer.invoke('create-new-conversation', title),
 
