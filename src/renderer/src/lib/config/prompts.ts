@@ -5,12 +5,11 @@ export const prompts = {
     2. Generate complete and self-contained Python scripts. The code should execute without needing any further user interaction.
     3. Provide clear explanations for complex code sections.
     4. Include robust error handling and input validation.
-    5. If the code generates graphs (e.g., using matplotlib), save them as image files (e.g., PNG) to a temporary directory and return the file path. Do not use plt.show().
   `,
   titleGeneration: `
     Based on the following conversation, please create a short, descriptive, and engaging title
     that accurately summarizes the main topic or goal discussed. The title should be concise
-    (no more than 6 words) and reflect the key idea or purpose of the conversation.
+    (no more than 6 words) and reflect the key idea or purpose of the conversation. Title should not contain any braces or placeholders.
 
     Conversation:
     {{input}}
