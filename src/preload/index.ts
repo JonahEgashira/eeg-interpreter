@@ -4,7 +4,8 @@ import { Conversation, Message } from '@shared/types/chat'
 import { CustomError } from '@shared/types/errors'
 
 const api = {
-  runPythonCode: (code: string): Promise<string> => ipcRenderer.invoke('run-python-code', code),
+  runPythonCode: (conversationId: string, code: string): Promise<string> =>
+    ipcRenderer.invoke('run-python-code', conversationId, code),
 
   getEnvVar: (key: string): Promise<string | null> => ipcRenderer.invoke('get-env-vars', key),
 

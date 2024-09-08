@@ -14,9 +14,9 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 export function setupIpcHandlers(): void {
-  ipcMain.handle('run-python-code', async (_, code: string) => {
+  ipcMain.handle('run-python-code', async (_, conversationId: string, code: string) => {
     try {
-      return await runPythonCode(code)
+      return await runPythonCode(conversationId, code)
     } catch (error) {
       console.error('Error running Python code:', error)
       return error

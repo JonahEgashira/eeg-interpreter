@@ -1,9 +1,9 @@
 import { Message, Conversation } from '@shared/types/chat'
 import { CustomError } from '@shared/types/errors'
 
-export async function runPythonCode(code: string): Promise<string> {
+export async function runPythonCode(conversationId: string, code: string): Promise<string> {
   try {
-    const result = await window.api.runPythonCode(code)
+    const result = await window.api.runPythonCode(conversationId, code)
     return result
   } catch (error) {
     console.error('Error running Python code at ipcFunctions:', error)

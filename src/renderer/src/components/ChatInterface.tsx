@@ -26,7 +26,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
         <div className="max-w-4xl w-full h-full flex flex-col">
           {currentConversation ? (
-            <MessageArea messages={currentConversation.messages} isStreaming={isStreaming} />
+            <MessageArea
+              conversationId={currentConversation.id}
+              messages={currentConversation.messages}
+              isStreaming={isStreaming}
+            />
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-gray-500">

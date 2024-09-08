@@ -1,6 +1,9 @@
 import { spawn, ChildProcess } from 'child_process'
 import { KernelManager, ServerConnection } from '@jupyterlab/services'
 import { app } from 'electron'
+import { getConversationImagesDir } from './jsonFileHandler'
+import * as path from 'path'
+import * as fs from 'fs/promises'
 
 let jupyterProcess: ChildProcess | null = null
 
@@ -67,7 +70,7 @@ export function stopJupyterServer(): Promise<void> {
   })
 }
 
-export async function runPythonCode(code: string): Promise<string> {
+export async function runPythonCode(conversationId: string, code: string): Promise<string> {
   const settings = ServerConnection.makeSettings({
     baseUrl: 'http://localhost:8888',
     token: JUPYTER_TOKEN
@@ -78,13 +81,22 @@ export async function runPythonCode(code: string): Promise<string> {
     const kernel = await kernelManager.startNew({ name: 'python3' })
     const future = kernel.requestExecute({ code })
 
+    const imagesDir = getConversationImagesDir(conversationId)
+
     return new Promise((resolve, reject) => {
       let result = ''
-      future.onIOPub = (msg): void => {
+      future.onIOPub = async (msg): Promise<void> => {
         if (msg.header.msg_type === 'execute_result' || msg.header.msg_type === 'stream') {
           result += (msg.content as { text: string }).text
         } else if (msg.header.msg_type === 'display_data') {
           const imageData = (msg.content as { data: { 'image/png': string } }).data['image/png']
+          const imageBuffer = Buffer.from(imageData, 'base64')
+
+          const imageFilename = `${Date.now()}.png`
+          const imagePath = path.join(imagesDir, imageFilename)
+
+          await fs.writeFile(imagePath, imageBuffer)
+
           result += `<img src="data:image/png;base64,${imageData}" alt="Python Output Image" />`
         } else if (msg.header.msg_type === 'error') {
           const errorMsg = (msg.content as { evalue: string }).evalue

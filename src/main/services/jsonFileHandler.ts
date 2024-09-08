@@ -36,6 +36,10 @@ function getConversationFilePath(conversationId: string): string {
   return path.join(getConversationDir(conversationId), 'conversation.json')
 }
 
+export function getConversationImagesDir(conversationId: string): string {
+  return path.join(getConversationDir(conversationId), 'images')
+}
+
 export async function saveConversation(conversation: Conversation): Promise<void> {
   const filePath = getConversationFilePath(conversation.id)
 

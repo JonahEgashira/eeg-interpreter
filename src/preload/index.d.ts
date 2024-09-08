@@ -3,7 +3,7 @@ import { Conversation, Message } from '@shared/types/chat'
 import { CustomError } from '@shared/types/errors'
 
 interface CustomAPI {
-  runPythonCode: (code: string) => Promise<string>
+  runPythonCode: (conversationId: string, code: string) => Promise<string>
   getEnvVar: (key: string) => Promise<string | null>
   saveConversation: (
     conversation: Conversation
