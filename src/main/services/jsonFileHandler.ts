@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import * as fs from 'fs/promises'
 import * as path from 'path'
 import {
   Conversation,
@@ -11,79 +11,117 @@ import {
 } from '@shared/types/chat'
 import { app } from 'electron'
 
-const conversationDir = path.join(app.getPath('userData'), 'conversations')
-const filesDir = path.join(app.getPath('userData'), 'files')
-const figuresDir = path.join(app.getPath('userData'), 'figures')
+const baseConversationDir = path.join(app.getPath('userData'), 'conversations')
 
-if (!fs.existsSync(conversationDir)) {
-  fs.mkdirSync(conversationDir, { recursive: true })
-}
+async function createConversationFolders(conversationId: string): Promise<void> {
+  const conversationDir = path.join(baseConversationDir, conversationId)
+  const imagesDir = path.join(conversationDir, 'images')
+  const filesDir = path.join(conversationDir, 'files')
 
-if (!fs.existsSync(filesDir)) {
-  fs.mkdirSync(filesDir, { recursive: true })
-}
-
-if (!fs.existsSync(figuresDir)) {
-  fs.mkdirSync(figuresDir, { recursive: true })
-}
-
-export function saveConversation(conversation: Conversation): void {
-  const fileName = `${conversation.id}.json`
-  const filePath = path.join(conversationDir, fileName)
-
-  const jsonConversation = conversationToJSON(conversation)
-
-  const jsonString = JSON.stringify(jsonConversation, null, 2)
   try {
-    fs.writeFileSync(filePath, jsonString)
+    await fs.mkdir(conversationDir, { recursive: true })
+    await fs.mkdir(imagesDir, { recursive: true })
+    await fs.mkdir(filesDir, { recursive: true })
   } catch (error) {
-    console.error(`Error saving conversation ${conversation.id}:`, error)
+    console.error('Error creating conversation directories:', error)
+    throw error
   }
 }
 
-export function loadConversation(id: string): Conversation | null {
-  const filePath = path.join(conversationDir, `${id}.json`)
-  if (!fs.existsSync(filePath)) return null
-
-  const jsonString = fs.readFileSync(filePath, 'utf-8')
-  const json = JSON.parse(jsonString)
-  const conversation = conversationFromJSON(json)
-  return conversation
+function getConversationDir(conversationId: string): string {
+  return path.join(baseConversationDir, conversationId)
 }
 
-export function createNewConversation(title: string | null = null): Conversation {
+function getConversationFilePath(conversationId: string): string {
+  return path.join(getConversationDir(conversationId), 'conversation.json')
+}
+
+export async function saveConversation(conversation: Conversation): Promise<void> {
+  const filePath = getConversationFilePath(conversation.id)
+
+  try {
+    await createConversationFolders(conversation.id)
+
+    const jsonConversation = conversationToJSON(conversation)
+    const jsonString = JSON.stringify(jsonConversation, null, 2)
+
+    await fs.writeFile(filePath, jsonString)
+  } catch (error) {
+    console.error(`Error saving conversation ${conversation.id}:`, error)
+    throw error
+  }
+}
+
+export async function loadConversation(id: string): Promise<Conversation | null> {
+  const filePath = getConversationFilePath(id)
+
+  try {
+    const jsonString = await fs.readFile(filePath, 'utf-8')
+    const json = JSON.parse(jsonString)
+    return conversationFromJSON(json)
+  } catch (error) {
+    console.error(`Error loading conversation ${id}:`, error)
+    return null
+  }
+}
+
+export async function createNewConversation(title: string): Promise<Conversation> {
   const newConversation = createConversation(null, title)
-  saveConversation(newConversation)
+  await saveConversation(newConversation)
+
   return newConversation
 }
 
-export function appendMessage(conversationId: string, message: Message): void {
-  const conversation = loadConversation(conversationId)
+export async function appendMessage(conversationId: string, message: Message): Promise<void> {
+  const conversation = await loadConversation(conversationId)
   if (conversation) {
     const updatedConversation = addMessage(conversation, message)
-    saveConversation(updatedConversation)
+    await saveConversation(updatedConversation)
   } else {
     console.error(`Conversation with id ${conversationId} not found`)
   }
 }
 
-export function listConversations(): Conversation[] {
-  const files = fs.readdirSync(conversationDir)
-  return files
-    .filter((file) => file.endsWith('.json'))
-    .map((file) => {
-      const filePath = path.join(conversationDir, file)
-      const jsonString = fs.readFileSync(filePath, 'utf-8')
-      const json = JSON.parse(jsonString) as ConversationJSON
-      return conversationFromJSON(json)
-    })
-}
+export async function listConversations(): Promise<Conversation[]> {
+  try {
+    const directories = await fs.readdir(baseConversationDir)
+    const conversations = await Promise.all(
+      directories.map(async (dir) => {
+        const filePath = getConversationFilePath(dir)
+        try {
+          const jsonString = await fs.readFile(filePath, 'utf-8')
+          const json = JSON.parse(jsonString) as ConversationJSON
+          return conversationFromJSON(json)
+        } catch (error) {
+          console.error(`Error loading conversation from ${filePath}:`, error)
+          return null
+        }
+      })
+    )
 
-export function deleteConversation(id: string): void {
-  const filePath = path.join(conversationDir, `${id}.json`)
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath)
-  } else {
-    console.error(`Conversation file with id ${id} not found`)
+    const result = conversations.filter((conv) => conv !== null) as Conversation[]
+    return result
+  } catch (error) {
+    console.error('Error listing conversations:', error)
+    return []
   }
 }
+
+export async function deleteConversation(id: string): Promise<void> {
+  const conversationDir = getConversationDir(id)
+  try {
+    await fs.rm(conversationDir, { recursive: true, force: true })
+  } catch (error) {
+    console.error(`Failed to delete conversation with id ${id}:`, error)
+  }
+}
+
+async function ensureBaseDirectoryExists(): Promise<void> {
+  try {
+    await fs.mkdir(baseConversationDir, { recursive: true })
+  } catch (error) {
+    console.error('Error creating base conversation directory:', error)
+  }
+}
+
+ensureBaseDirectoryExists().catch(console.error)

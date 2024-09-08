@@ -96,14 +96,14 @@ const App = (): JSX.Element => {
           prompt: titleGenerationPrompt
         })
 
-        const cleanTitle = generatedTitle.text.replace(/^["']|["']$/g, '').trim()
+        const formattedTitle = generatedTitle.text.replace(/^["']|["']$/g, '').trim()
 
-        const result = await createNewConversation(cleanTitle)
+        const newConversation = await createNewConversation(formattedTitle)
 
-        if (!result.success || !result.conversation) {
+        if (!newConversation.success || !newConversation.conversation) {
           throw new Error('Failed to create new conversation')
         }
-        updatedConversation = result.conversation
+        updatedConversation = newConversation.conversation
       } else {
         updatedConversation = { ...currentConversation }
       }

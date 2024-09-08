@@ -1,9 +1,13 @@
 import { spawn, ChildProcess } from 'child_process'
 import { KernelManager, ServerConnection } from '@jupyterlab/services'
+import { app } from 'electron'
 
 let jupyterProcess: ChildProcess | null = null
 
 export const JUPYTER_TOKEN = 'my-jupyter'
+
+const userDataPath = app.getPath('userData')
+process.chdir(userDataPath)
 
 export function startJupyterServer(): Promise<void> {
   return new Promise((resolve, reject) => {

@@ -31,9 +31,9 @@ export function setupIpcHandlers(): void {
     return null
   })
 
-  ipcMain.handle('save-conversation', (_, conversation: Conversation) => {
+  ipcMain.handle('save-conversation', async (_, conversation: Conversation) => {
     try {
-      saveConversation(conversation)
+      await saveConversation(conversation)
       return { success: true }
     } catch (error) {
       console.error('Error saving conversation:', error)
@@ -41,9 +41,9 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('load-conversation', (_, id: string) => {
+  ipcMain.handle('load-conversation', async (_, id: string) => {
     try {
-      const conversation = loadConversation(id)
+      const conversation = await loadConversation(id)
       return { success: true, conversation }
     } catch (error) {
       console.error('Error loading conversation:', error)
@@ -51,9 +51,9 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('create-new-conversation', (_, title?: string) => {
+  ipcMain.handle('create-new-conversation', async (_, title: string) => {
     try {
-      const newConversation = createNewConversation(title)
+      const newConversation = await createNewConversation(title)
       return { success: true, conversation: newConversation }
     } catch (error) {
       console.error('Error creating new conversation:', error)
@@ -61,9 +61,9 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('append-message', (_, conversationId: string, message: Message) => {
+  ipcMain.handle('append-message', async (_, conversationId: string, message: Message) => {
     try {
-      appendMessage(conversationId, message)
+      await appendMessage(conversationId, message)
       return { success: true }
     } catch (error) {
       console.error('Error appending message:', error)
@@ -71,9 +71,9 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('list-conversations', () => {
+  ipcMain.handle('list-conversations', async () => {
     try {
-      const conversations = listConversations()
+      const conversations = await listConversations()
       return { success: true, conversations }
     } catch (error) {
       console.error('Error listing conversations:', error)
@@ -81,9 +81,9 @@ export function setupIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('delete-conversation', (_, id: string) => {
+  ipcMain.handle('delete-conversation', async (_, id: string) => {
     try {
-      deleteConversation(id)
+      await deleteConversation(id)
       return { success: true }
     } catch (error) {
       console.error('Error deleting conversation:', error)

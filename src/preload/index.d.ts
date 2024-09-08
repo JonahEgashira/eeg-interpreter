@@ -12,7 +12,7 @@ interface CustomAPI {
     id: string
   ) => Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }>
   createNewConversation: (
-    title: string | null
+    title: string
   ) => Promise<{ success: boolean; conversation?: Conversation; error?: CustomError }>
   appendMessage: (
     conversationId: string,

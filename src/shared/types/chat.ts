@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid'
 
 export interface ExecutionResult {
+  code: string
   output?: string
   figurePaths?: string[]
-  filePaths?: string[]
   error?: string
 }
 
@@ -28,7 +28,7 @@ export type ConversationJSON = Omit<Conversation, 'createdAt' | 'updatedAt'> & {
 
 export function createConversation(
   id: string | null = null,
-  title: string | null = null,
+  title: string,
   messages: Message[] = []
 ): Conversation {
   return {
