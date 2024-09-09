@@ -1,4 +1,3 @@
-// File: src/components/ChatInterface.tsx
 import React from 'react'
 import { Conversation } from '@shared/types/chat'
 import MessageArea from './MessageArea'
