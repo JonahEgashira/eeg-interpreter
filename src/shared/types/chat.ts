@@ -8,6 +8,7 @@ export interface ExecutionResult {
 }
 
 export interface Message {
+  id: number
   role: 'user' | 'assistant'
   content: string
   executionResults?: ExecutionResult[]
@@ -41,9 +42,11 @@ export function createConversation(
 }
 
 export function addMessage(conversation: Conversation, message: Message): Conversation {
+  const nextId = conversation.messages.length + 1
+  const newMessage = { ...message, id: nextId }
   return {
     ...conversation,
-    messages: [...conversation.messages, message],
+    messages: [...conversation.messages, newMessage],
     updatedAt: new Date()
   }
 }
