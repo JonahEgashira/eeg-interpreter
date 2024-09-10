@@ -1,72 +1,71 @@
 import React, { useRef, useEffect, memo } from 'react'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
-import { Message } from '@shared/types/chat'
+import { Conversation, Message } from '@shared/types/chat'
 import Markdown from 'react-markdown'
 import CodeBlock from './CodeBlock'
 
 interface MessageAreaProps {
-  conversationId: string
+  conversation: Conversation
   messages: Message[]
   isStreaming: boolean
 }
 
-const MessageArea: React.FC<MessageAreaProps> = memo(
-  ({ conversationId, messages, isStreaming }) => {
-    const messageAreaRef = useRef<HTMLDivElement>(null)
+const MessageArea: React.FC<MessageAreaProps> = memo(({ conversation, messages, isStreaming }) => {
+  const messageAreaRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-      if (isStreaming && messageAreaRef.current) {
-        messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight
-      }
-    }, [isStreaming, messages])
+  useEffect(() => {
+    if (isStreaming && messageAreaRef.current) {
+      messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight
+    }
+  }, [isStreaming, messages])
 
-    return (
-      <div ref={messageAreaRef} className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]">
-        {messages.map((message, index) => (
-          <div key={index} className="flex justify-center">
-            <div
-              className={`p-3 rounded-lg w-4/5 ${
-                message.role === 'user'
-                  ? 'bg-gray-700 text-white'
-                  : 'bg-white text-black border border-gray-200'
-              }`}
+  return (
+    <div ref={messageAreaRef} className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]">
+      {messages.map((message, index) => (
+        <div key={index} className="flex justify-center">
+          <div
+            className={`p-3 rounded-lg w-4/5 ${
+              message.role === 'user'
+                ? 'bg-gray-700 text-white'
+                : 'bg-white text-black border border-gray-200'
+            }`}
+          >
+            <Markdown
+              rehypePlugins={[rehypeRaw]}
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code({ className, children, ...rest }) {
+                  const match = /language-(\w+)/.exec(className || '')
+                  const codeContent = String(children).replace(/\n$/, '')
+                  const language = match ? match[1] : ''
+                  const inline = !className
+
+                  return (
+                    <CodeBlock
+                      conversation={conversation}
+                      messageId={message.id}
+                      code={codeContent}
+                      language={language}
+                      inline={inline}
+                      index={index}
+                      {...rest}
+                    />
+                  )
+                }
+              }}
             >
-              <Markdown
-                rehypePlugins={[rehypeRaw]}
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  code({ className, children, ...rest }) {
-                    const match = /language-(\w+)/.exec(className || '')
-                    const codeContent = String(children).replace(/\n$/, '')
-                    const language = match ? match[1] : ''
-                    const inline = !className
-
-                    return (
-                      <CodeBlock
-                        conversationId={conversationId}
-                        code={codeContent}
-                        language={language}
-                        inline={inline}
-                        index={index}
-                        {...rest}
-                      />
-                    )
-                  }
-                }}
-              >
-                {message.content}
-              </Markdown>
-              {message.role === 'assistant' && isStreaming && index === messages.length - 1 && (
-                <span className="text-gray-500 animate-pulse">...</span>
-              )}
-            </div>
+              {message.content}
+            </Markdown>
+            {message.role === 'assistant' && isStreaming && index === messages.length - 1 && (
+              <span className="text-gray-500 animate-pulse">...</span>
+            )}
           </div>
-        ))}
-      </div>
-    )
-  }
-)
+        </div>
+      ))}
+    </div>
+  )
+})
 
 MessageArea.displayName = 'MessageArea'
 

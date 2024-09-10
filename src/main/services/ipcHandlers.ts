@@ -1,27 +1,41 @@
 import { ipcMain } from 'electron'
-import { runPythonCode } from './pythonHandler'
+import { runPythonCode, saveConversationWithPythonResult } from './pythonHandler'
 import {
   saveConversation,
   loadConversation,
   appendMessage,
   createNewConversation,
   listConversations,
-  deleteConversation
+  deleteConversation,
+  getConversationImagesDir
 } from './jsonFileHandler'
-import { Conversation, Message } from '@shared/types/chat'
+import { Conversation, ExecutionResult, Message } from '@shared/types/chat'
 import * as dotenv from 'dotenv'
 
 dotenv.config()
 
 export function setupIpcHandlers(): void {
-  ipcMain.handle('run-python-code', async (_, conversationId: string, code: string) => {
+  ipcMain.handle('run-python-code', async (_, figuresDirectoryPath: string, code: string) => {
     try {
-      return await runPythonCode(conversationId, code)
+      return await runPythonCode(figuresDirectoryPath, code)
     } catch (error) {
       console.error('Error running Python code:', error)
       return error
     }
   })
+
+  ipcMain.handle(
+    'save-conversation-with-python-result',
+    async (_, conversation: Conversation, messageId: number, executionResult: ExecutionResult) => {
+      try {
+        await saveConversationWithPythonResult(conversation, messageId, executionResult)
+        return { success: true }
+      } catch (error) {
+        console.error('Error saving conversation with Python result:', error)
+        return { success: false, error }
+      }
+    }
+  )
 
   const allowedEnvVars = ['OPENAI_API_KEY']
   ipcMain.handle('get-env-vars', (_, key: string) => {
@@ -87,6 +101,15 @@ export function setupIpcHandlers(): void {
       return { success: true }
     } catch (error) {
       console.error('Error deleting conversation:', error)
+      return { success: false, error }
+    }
+  })
+
+  ipcMain.handle('get-conversation-images-dir', (_, conversationId: string) => {
+    try {
+      return getConversationImagesDir(conversationId)
+    } catch (error) {
+      console.error('Error getting conversation images dir:', error)
       return { success: false, error }
     }
   })

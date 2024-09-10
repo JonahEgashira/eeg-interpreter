@@ -2,10 +2,23 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { Conversation, Message } from '@shared/types/chat'
 import { CustomError } from '@shared/types/errors'
+import { ExecutionResult } from '@shared/types/chat'
 
 const api = {
-  runPythonCode: (conversationId: string, code: string): Promise<string> =>
-    ipcRenderer.invoke('run-python-code', conversationId, code),
+  runPythonCode: (figuresDirectoryPath: string, code: string): Promise<ExecutionResult> =>
+    ipcRenderer.invoke('run-python-code', figuresDirectoryPath, code),
+
+  saveConversationWithPythonResult: (
+    conversation: Conversation,
+    messageId: number,
+    executionResult: ExecutionResult
+  ): Promise<{ success: boolean; error?: CustomError }> =>
+    ipcRenderer.invoke(
+      'save-conversation-with-python-result',
+      conversation,
+      messageId,
+      executionResult
+    ),
 
   getEnvVar: (key: string): Promise<string | null> => ipcRenderer.invoke('get-env-vars', key),
 
@@ -37,7 +50,10 @@ const api = {
   }> => ipcRenderer.invoke('list-conversations'),
 
   deleteConversation: (id: string): Promise<{ success: boolean; error?: CustomError }> =>
-    ipcRenderer.invoke('delete-conversation', id)
+    ipcRenderer.invoke('delete-conversation', id),
+
+  getConversationImagesDir: (conversationId: string): Promise<string> =>
+    ipcRenderer.invoke('get-conversation-images-dir', conversationId)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

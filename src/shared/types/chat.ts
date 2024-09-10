@@ -41,6 +41,24 @@ export function createConversation(
   }
 }
 
+export function addExecutionResult(
+  conversation: Conversation,
+  messageId: number,
+  result: ExecutionResult
+): Conversation {
+  return {
+    ...conversation,
+    messages: conversation.messages.map((message) =>
+      message.id === messageId
+        ? {
+            ...message,
+            executionResults: [...(message.executionResults || []), result]
+          }
+        : message
+    )
+  }
+}
+
 export function addMessage(conversation: Conversation, message: Message): Conversation {
   return {
     ...conversation,

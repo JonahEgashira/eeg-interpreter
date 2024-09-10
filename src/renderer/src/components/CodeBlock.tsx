@@ -3,9 +3,14 @@ import { runPythonCode } from '@renderer/lib/ipcFunctions'
 import { Play, Download } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { Conversation } from '@shared/types/chat'
+import { ExecutionResult } from '@shared/types/chat'
+import { saveConversationWithPythonResult } from '@renderer/lib/ipcFunctions'
+import { getConversationImagesDir } from '@renderer/lib/ipcFunctions'
 
 interface CodeBlockProps {
-  conversationId: string
+  conversation: Conversation
+  messageId: number
   code: string
   language: string
   inline: boolean
@@ -13,15 +18,21 @@ interface CodeBlockProps {
 }
 
 const CodeBlock: React.FC<CodeBlockProps> = memo(
-  ({ conversationId, code, language, inline, index }) => {
-    const [result, setResult] = useState<string | null>(null)
+  ({ conversation, messageId, code, language, inline, index }) => {
+    const [result, setResult] = useState<ExecutionResult | null>(null)
 
     const handleRun = async () => {
       try {
-        const res = await runPythonCode(conversationId, code)
-        setResult(res)
+        const figureDir = await getConversationImagesDir(conversation.id)
+        const result = await runPythonCode(figureDir, code)
+        await saveConversationWithPythonResult(conversation, messageId, result)
+        setResult(result)
       } catch (error) {
-        setResult('Error running code')
+        const result: ExecutionResult = {
+          code,
+          error: (error as Error).message
+        }
+        setResult(result)
       }
     }
 
@@ -57,13 +68,13 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         <SyntaxHighlighter PreTag="div" style={oneLight} language={language}>
           {code}
         </SyntaxHighlighter>
-        {language === 'python' && result && (
+        {language === 'python' && result?.output && (
           <div className="mt-2 p-2 bg-gray-100 rounded">
             <div className="mb-2 flex justify-between items-center">
               <strong>Output</strong>
-              {getImageDownloadLink(result) && (
+              {getImageDownloadLink(result.output) && (
                 <a
-                  href={getImageDownloadLink(result)}
+                  href={getImageDownloadLink(result.output)}
                   download={`python_output_${index}.png`}
                   className="text-black underline flex items-center"
                 >
@@ -71,7 +82,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
                 </a>
               )}
             </div>
-            <div dangerouslySetInnerHTML={{ __html: result }} />
+            <div dangerouslySetInnerHTML={{ __html: result.output }} />
           </div>
         )}
       </div>

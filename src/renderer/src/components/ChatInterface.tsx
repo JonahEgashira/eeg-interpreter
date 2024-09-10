@@ -26,7 +26,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div className="max-w-4xl w-full h-full flex flex-col">
           {currentConversation ? (
             <MessageArea
-              conversationId={currentConversation.id}
+              conversation={currentConversation}
               messages={currentConversation.messages}
               isStreaming={isStreaming}
             />

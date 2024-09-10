@@ -1,9 +1,15 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import { Conversation, Message } from '@shared/types/chat'
 import { CustomError } from '@shared/types/errors'
+import { ExecutionResult } from '@shared/types/chat'
 
 interface CustomAPI {
-  runPythonCode: (conversationId: string, code: string) => Promise<string>
+  runPythonCode: (figuresDirectoryPath: string, code: string) => Promise<ExecutionResult>
+  saveConversationWithPythonResult: (
+    conversation: Conversation,
+    messageId: number,
+    executionResult: ExecutionResult
+  ) => Promise<{ success: boolean; error?: CustomError }>
   getEnvVar: (key: string) => Promise<string | null>
   saveConversation: (
     conversation: Conversation
@@ -24,6 +30,7 @@ interface CustomAPI {
     error?: CustomError
   }>
   deleteConversation: (id: string) => Promise<{ success: boolean; error?: CustomError }>
+  getConversationImagesDir: (conversationId: string) => Promise<string>
 }
 
 declare global {

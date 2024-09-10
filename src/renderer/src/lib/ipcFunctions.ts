@@ -1,13 +1,34 @@
-import { Message, Conversation } from '@shared/types/chat'
+import { Message, Conversation, ExecutionResult } from '@shared/types/chat'
 import { CustomError } from '@shared/types/errors'
 
-export async function runPythonCode(conversationId: string, code: string): Promise<string> {
+export async function runPythonCode(
+  figuresDirectoryPath: string,
+  code: string
+): Promise<ExecutionResult> {
   try {
-    const result = await window.api.runPythonCode(conversationId, code)
+    const result = await window.api.runPythonCode(figuresDirectoryPath, code)
     return result
   } catch (error) {
     console.error('Error running Python code at ipcFunctions:', error)
     throw error
+  }
+}
+
+export async function saveConversationWithPythonResult(
+  conversation: Conversation,
+  messageId: number,
+  executionResult: ExecutionResult
+): Promise<{ success: boolean; error?: CustomError }> {
+  try {
+    const result = await window.api.saveConversationWithPythonResult(
+      conversation,
+      messageId,
+      executionResult
+    )
+    return result
+  } catch (error) {
+    console.error('Error saving conversation with Python result at ipcFunctions:', error)
+    return { success: false, error: { message: (error as Error).message } }
   }
 }
 
@@ -93,5 +114,15 @@ export async function deleteConversation(
   } catch (error) {
     console.error('Error deleting conversation at ipcFunctions:', error)
     return { success: false, error: { message: (error as Error).message } }
+  }
+}
+
+export async function getConversationImagesDir(conversationId: string): Promise<string> {
+  try {
+    const result = await window.api.getConversationImagesDir(conversationId)
+    return result
+  } catch (error) {
+    console.error('Error getting conversation images directory at ipcFunctions:', error)
+    throw error
   }
 }

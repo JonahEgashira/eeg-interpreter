@@ -1,13 +1,14 @@
 import { spawn, ChildProcess } from 'child_process'
 import { KernelManager, ServerConnection } from '@jupyterlab/services'
 import { app } from 'electron'
-import { getConversationImagesDir } from './jsonFileHandler'
-import * as path from 'path'
-import * as fs from 'fs/promises'
+import { handleFigureData } from './figureHandler'
+import { Conversation, ExecutionResult, addExecutionResult } from '@shared/types/chat'
+import * as crypto from 'crypto'
+import { saveConversation } from './jsonFileHandler'
 
+const JUPYTER_TOKEN = crypto.randomBytes(16).toString('hex')
+const JUPYTER_PORT = 8888
 let jupyterProcess: ChildProcess | null = null
-
-export const JUPYTER_TOKEN = 'my-jupyter'
 
 const userDataPath = app.getPath('userData')
 process.chdir(userDataPath)
@@ -17,31 +18,31 @@ export function startJupyterServer(): Promise<void> {
     jupyterProcess = spawn('jupyter', [
       'notebook',
       '--no-browser',
-      '--port=8888',
+      `--port=${JUPYTER_PORT}`,
       `--IdentityProvider.token=${JUPYTER_TOKEN}`,
       '--ServerApp.disable_check_xsrf=True'
     ])
+
     if (!jupyterProcess) {
-      reject(new Error('Failed to start Jupyter server'))
-      return
+      return reject(new Error('Failed to start Jupyter server'))
     }
-    if (jupyterProcess.stdout) {
-      jupyterProcess.stdout.on('data', (data) => {
-        console.log(`Jupyter stdout: ${data}`)
-        if (data.toString().includes('http://localhost:8888/')) {
-          resolve()
-        }
-      })
-    }
-    if (jupyterProcess.stderr) {
-      jupyterProcess.stderr.on('data', (data) => {
-        console.error(`Jupyter stderr: ${data}`)
-      })
-    }
+
+    jupyterProcess.stdout?.on('data', (data) => {
+      console.log(`Jupyter stdout: ${data}`)
+      if (data.toString().includes(`http://localhost:${JUPYTER_PORT}/`)) {
+        resolve()
+      }
+    })
+
+    jupyterProcess.stderr?.on('data', (data) => {
+      console.error(`Jupyter stderr: ${data}`)
+    })
+
     jupyterProcess.on('close', (code) => {
       console.log(`Jupyter server exited with code ${code}`)
       jupyterProcess = null
     })
+
     jupyterProcess.on('error', (err) => {
       console.error('Failed to start Jupyter server:', err)
       reject(err)
@@ -51,28 +52,32 @@ export function startJupyterServer(): Promise<void> {
 
 export function stopJupyterServer(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (jupyterProcess) {
-      jupyterProcess.on('close', () => {
-        console.log('Jupyter server stopped')
-        jupyterProcess = null
-        resolve()
-      })
-
-      jupyterProcess.on('error', (err) => {
-        console.error('Error stopping Jupyter server:', err)
-        reject(err)
-      })
-
-      jupyterProcess.kill()
-    } else {
-      resolve()
+    if (!jupyterProcess) {
+      return resolve()
     }
+
+    jupyterProcess.on('close', () => {
+      console.log('Jupyter server stopped')
+      jupyterProcess = null
+      resolve()
+    })
+
+    jupyterProcess.on('error', (err) => {
+      console.error('Error stopping Jupyter server:', err)
+      reject(err)
+    })
+
+    jupyterProcess.kill()
   })
 }
 
-export async function runPythonCode(conversationId: string, code: string): Promise<string> {
+export async function runPythonCode(
+  figuresDirectoryPath: string,
+  code: string
+): Promise<ExecutionResult> {
+  console.log('figuresDirectoryPath:', figuresDirectoryPath)
   const settings = ServerConnection.makeSettings({
-    baseUrl: 'http://localhost:8888',
+    baseUrl: `http://localhost:${JUPYTER_PORT}`,
     token: JUPYTER_TOKEN
   })
 
@@ -81,37 +86,60 @@ export async function runPythonCode(conversationId: string, code: string): Promi
     const kernel = await kernelManager.startNew({ name: 'python3' })
     const future = kernel.requestExecute({ code })
 
-    const imagesDir = getConversationImagesDir(conversationId)
-
     return new Promise((resolve, reject) => {
-      let result = ''
+      let output = ''
+      const figurePaths: string[] = []
+
       future.onIOPub = async (msg): Promise<void> => {
         if (msg.header.msg_type === 'execute_result' || msg.header.msg_type === 'stream') {
-          result += (msg.content as { text: string }).text
+          output += (msg.content as { text: string }).text
         } else if (msg.header.msg_type === 'display_data') {
           const imageData = (msg.content as { data: { 'image/png': string } }).data['image/png']
-          const imageBuffer = Buffer.from(imageData, 'base64')
-
-          const imageFilename = `${Date.now()}.png`
-          const imagePath = path.join(imagesDir, imageFilename)
-
-          await fs.writeFile(imagePath, imageBuffer)
-
-          result += `<img src="data:image/png;base64,${imageData}" alt="Python Output Image" />`
+          try {
+            const { figurePath } = await handleFigureData(imageData, figuresDirectoryPath)
+            figurePaths.push(figurePath)
+            output += `<img src="data:image/png;base64,${imageData}" alt="Python Output Image" />`
+          } catch (error) {
+            console.error('Error handling figure data:', error)
+          }
         } else if (msg.header.msg_type === 'error') {
-          const errorMsg = (msg.content as { evalue: string }).evalue
-          reject(new Error(errorMsg))
+          const errorContent = msg.content as { evalue: string; traceback: string[] }
+          reject(new Error(`${errorContent.evalue}\n${errorContent.traceback.join('\n')}`))
         }
       }
-      future.done.then(() => {
-        kernel
-          .shutdown()
-          .then(() => resolve(result))
-          .catch(reject)
-      })
+
+      future.done
+        .then(() => {
+          const result: ExecutionResult = { code }
+          if (output) result.output = output
+          if (figurePaths.length) result.figurePaths = figurePaths
+
+          kernel
+            .shutdown()
+            .then(() => resolve(result))
+            .catch((err) => reject(new Error(`Error shutting down kernel: ${err.message}`)))
+        })
+        .catch((err) => reject(new Error(`Error during code execution: ${err.message}`)))
     })
   } catch (error) {
     console.error('Error in runPythonCode:', error)
+    return {
+      code,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    }
+  }
+}
+
+export async function saveConversationWithPythonResult(
+  conversation: Conversation,
+  messageId: number,
+  executionResult: ExecutionResult
+): Promise<void> {
+  try {
+    const updatedConversation = addExecutionResult(conversation, messageId, executionResult)
+    await saveConversation(updatedConversation)
+  } catch (error) {
+    console.error('Error updating and saving conversation:', error)
     throw error
   }
 }
