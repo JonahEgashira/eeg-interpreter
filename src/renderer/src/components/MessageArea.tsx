@@ -27,36 +27,40 @@ const MessageArea: React.FC<MessageAreaProps> = memo(({ conversation, messages, 
           <div
             className={`p-3 rounded-lg w-4/5 ${
               message.role === 'user'
-                ? 'bg-gray-700 text-white'
+                ? 'bg-black text-white'
                 : 'bg-white text-black border border-gray-200'
             }`}
           >
-            <Markdown
-              rehypePlugins={[rehypeRaw]}
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code({ className, children, ...rest }) {
-                  const match = /language-(\w+)/.exec(className || '')
-                  const codeContent = String(children).replace(/\n$/, '')
-                  const language = match ? match[1] : ''
-                  const inline = !className
+            {message.role === 'user' ? (
+              <p style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
+            ) : (
+              <Markdown
+                rehypePlugins={[rehypeRaw]}
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code({ className, children, ...rest }) {
+                    const match = /language-(\w+)/.exec(className || '')
+                    const codeContent = String(children).replace(/\n$/, '')
+                    const language = match ? match[1] : ''
+                    const inline = !className
 
-                  return (
-                    <CodeBlock
-                      conversation={conversation}
-                      messageId={message.id}
-                      code={codeContent}
-                      language={language}
-                      inline={inline}
-                      index={index}
-                      {...rest}
-                    />
-                  )
-                }
-              }}
-            >
-              {message.content}
-            </Markdown>
+                    return (
+                      <CodeBlock
+                        conversation={conversation}
+                        messageId={message.id}
+                        code={codeContent}
+                        language={language}
+                        inline={inline}
+                        index={index}
+                        {...rest}
+                      />
+                    )
+                  }
+                }}
+              >
+                {message.content}
+              </Markdown>
+            )}
             {message.role === 'assistant' && isStreaming && index === messages.length - 1 && (
               <span className="text-gray-500 animate-pulse">...</span>
             )}

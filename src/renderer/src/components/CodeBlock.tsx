@@ -66,7 +66,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
 
     if (inline) {
       return (
-        <code key={index} className="bg-gray-200 rounded px-1 py-0.5 text-sm">
+        <code key={index} className="bg-gray-300 rounded px-1 py-0.5 text-sm">
           {code}
         </code>
       )
