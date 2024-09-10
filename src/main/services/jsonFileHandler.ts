@@ -15,7 +15,7 @@ const baseConversationDir = path.join(app.getPath('userData'), 'conversations')
 
 async function createConversationFolders(conversationId: string): Promise<void> {
   const conversationDir = path.join(baseConversationDir, conversationId)
-  const imagesDir = path.join(conversationDir, 'images')
+  const imagesDir = path.join(conversationDir, 'base64')
   const filesDir = path.join(conversationDir, 'files')
 
   try {
@@ -89,9 +89,24 @@ export async function appendMessage(conversationId: string, message: Message): P
 export async function listConversations(): Promise<Conversation[]> {
   try {
     const directories = await fs.readdir(baseConversationDir)
-    const conversations = await Promise.all(
+
+    const validDirectories = await Promise.all(
       directories.map(async (dir) => {
-        const filePath = getConversationFilePath(dir)
+        const dirPath = path.join(baseConversationDir, dir)
+        try {
+          const stat = await fs.stat(dirPath)
+          return stat.isDirectory() ? dir : null
+        } catch {
+          return null
+        }
+      })
+    )
+
+    const filteredDirectories = validDirectories.filter((dir) => dir !== null)
+
+    const conversations = await Promise.all(
+      filteredDirectories.map(async (dir) => {
+        const filePath = getConversationFilePath(dir as string)
         try {
           const jsonString = await fs.readFile(filePath, 'utf-8')
           const json = JSON.parse(jsonString) as ConversationJSON
