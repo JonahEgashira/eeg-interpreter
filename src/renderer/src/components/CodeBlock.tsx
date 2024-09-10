@@ -79,7 +79,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
             <div dangerouslySetInnerHTML={{ __html: result.output }} />
           </div>
         )}
-        {language === 'python' && base64Figures.length && (
+        {language === 'python' && base64Figures.length > 0 && (
           <div className="mt-2 p-2 bg-gray-100 rounded">
             <div>
               <strong>Figures</strong>
