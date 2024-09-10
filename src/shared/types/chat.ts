@@ -42,11 +42,9 @@ export function createConversation(
 }
 
 export function addMessage(conversation: Conversation, message: Message): Conversation {
-  const nextId = conversation.messages.length + 1
-  const newMessage = { ...message, id: nextId }
   return {
     ...conversation,
-    messages: [...conversation.messages, newMessage],
+    messages: [...conversation.messages, message],
     updatedAt: new Date()
   }
 }

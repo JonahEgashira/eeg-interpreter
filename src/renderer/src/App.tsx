@@ -81,7 +81,14 @@ const App = (): JSX.Element => {
 
     try {
       const parsedUserMessage = InputSchema.parse({ input: userMessage })
-      const newUserMessage: Message = { role: 'user', content: parsedUserMessage.input }
+      const conversationLength = currentConversation?.messages.length || 0
+
+      const userMessageId = conversationLength + 1
+      const newUserMessage: Message = {
+        id: userMessageId,
+        role: 'user',
+        content: parsedUserMessage.input
+      }
 
       const openai = createOpenAI({ apiKey: openaiApiKey })
 
@@ -98,12 +105,12 @@ const App = (): JSX.Element => {
 
         const formattedTitle = generatedTitle.text.replace(/^["']|["']$/g, '').trim()
 
-        const newConversation = await createNewConversation(formattedTitle)
+        const result = await createNewConversation(formattedTitle)
 
-        if (!newConversation.success || !newConversation.conversation) {
+        if (!result.success || !result.conversation) {
           throw new Error('Failed to create new conversation')
         }
-        updatedConversation = newConversation.conversation
+        updatedConversation = result.conversation
       } else {
         updatedConversation = { ...currentConversation }
       }
@@ -123,7 +130,9 @@ const App = (): JSX.Element => {
       })
 
       let fullResponse = ''
-      const newAIMessage: Message = { role: 'assistant', content: '' }
+      const updatedConversationLength = updatedConversation.messages.length
+      const aiMessageID = updatedConversationLength + 1
+      const newAIMessage: Message = { id: aiMessageID, role: 'assistant', content: '' }
 
       for await (const delta of result.textStream) {
         fullResponse += delta
