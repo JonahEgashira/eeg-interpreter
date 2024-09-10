@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
 import { Play, Download } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -24,6 +24,23 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
   ({ conversation, messageId, code, language, inline, index }) => {
     const [result, setResult] = useState<ExecutionResult | null>(null)
     const [base64Figures, setBase64Figures] = useState<string[]>([])
+
+    useEffect(() => {
+      const existingResult = conversation?.messages.find(
+        (message) => message.id === messageId && message.executionResults
+      )?.executionResults?.[0]
+
+      if (existingResult) {
+        setResult(existingResult)
+
+        if (existingResult.figurePaths) {
+          Promise.all(existingResult.figurePaths.map(loadBase64Data)).then((base64Images) => {
+            const filteredImages = base64Images.filter((base64) => base64 !== null) as string[]
+            setBase64Figures(filteredImages)
+          })
+        }
+      }
+    }, [conversation, messageId])
 
     const handleRun = async () => {
       try {
