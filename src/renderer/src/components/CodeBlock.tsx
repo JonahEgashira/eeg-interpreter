@@ -81,25 +81,24 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         )}
         {language === 'python' && base64Figures.length && (
           <div className="mt-2 p-2 bg-gray-100 rounded">
-            <div className="mb-2">
+            <div>
               <strong>Figures</strong>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {base64Figures.map((base64, i) => (
-                <div key={i} className="flex justify-between items-center">
+                <div key={i} className="flex flex-col items-start mb-2">
+                  <a
+                    href={`data:image/png;base64,${base64}`}
+                    download={`figure-${i}-test.png`}
+                    className="my-2 self-end p-1 text-black underline flex items-center"
+                  >
+                    <Download size={20} />
+                  </a>
                   <img
                     src={`data:image/png;base64,${base64}`}
                     alt={`figure-${i}`}
                     className="max-w-full"
                   />
-
-                  <a
-                    href={`data:image/png;base64,${base64}`}
-                    download={`figure-${i}-test.png`}
-                    className="text-black underline flex items-center"
-                  >
-                    <Download size={20} />
-                  </a>
                 </div>
               ))}
             </div>
