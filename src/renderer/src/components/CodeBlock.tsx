@@ -5,8 +5,11 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Conversation } from '@shared/types/chat'
 import { ExecutionResult } from '@shared/types/chat'
-import { saveConversationWithPythonResult } from '@renderer/lib/ipcFunctions'
-import { getConversationImagesDir } from '@renderer/lib/ipcFunctions'
+import {
+  saveConversationWithPythonResult,
+  getConversationImagesDir,
+  loadBase64Data
+} from '@renderer/lib/ipcFunctions'
 
 interface CodeBlockProps {
   conversation: Conversation
@@ -20,6 +23,7 @@ interface CodeBlockProps {
 const CodeBlock: React.FC<CodeBlockProps> = memo(
   ({ conversation, messageId, code, language, inline, index }) => {
     const [result, setResult] = useState<ExecutionResult | null>(null)
+    const [base64Figures, setBase64Figures] = useState<string[]>([])
 
     const handleRun = async () => {
       try {
@@ -27,6 +31,13 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         const result = await runPythonCode(figureDir, code)
         await saveConversationWithPythonResult(conversation, messageId, result)
         setResult(result)
+
+        if (result.figurePaths) {
+          const base64Images = (await Promise.all(result.figurePaths.map(loadBase64Data))).filter(
+            (base64) => base64 !== null
+          ) as string[]
+          setBase64Figures(base64Images)
+        }
       } catch (error) {
         const result: ExecutionResult = {
           code,
@@ -42,14 +53,6 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
           {code}
         </code>
       )
-    }
-
-    const getImageDownloadLink = (htmlString: string): string | undefined => {
-      const imgTagMatch = htmlString.match(/<img\s+src="data:image\/png;base64,([^"]+)"\s*.*?>/)
-      if (imgTagMatch && imgTagMatch[1]) {
-        return `data:image/png;base64,${imgTagMatch[1]}`
-      }
-      return undefined
     }
 
     return (
@@ -70,19 +73,36 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         </SyntaxHighlighter>
         {language === 'python' && result?.output && (
           <div className="mt-2 p-2 bg-gray-100 rounded">
-            <div className="mb-2 flex justify-between items-center">
+            <div className="mb-2">
               <strong>Output</strong>
-              {getImageDownloadLink(result.output) && (
-                <a
-                  href={getImageDownloadLink(result.output)}
-                  download={`python_output_${index}.png`}
-                  className="text-black underline flex items-center"
-                >
-                  <Download size={20} />
-                </a>
-              )}
             </div>
             <div dangerouslySetInnerHTML={{ __html: result.output }} />
+          </div>
+        )}
+        {language === 'python' && base64Figures.length && (
+          <div className="mt-2 p-2 bg-gray-100 rounded">
+            <div className="mb-2">
+              <strong>Figures</strong>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {base64Figures.map((base64, i) => (
+                <div key={i} className="flex justify-between items-center">
+                  <img
+                    src={`data:image/png;base64,${base64}`}
+                    alt={`figure-${i}`}
+                    className="max-w-full"
+                  />
+
+                  <a
+                    href={`data:image/png;base64,${base64}`}
+                    download={`figure-${i}-test.png`}
+                    className="text-black underline flex items-center"
+                  >
+                    <Download size={20} />
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

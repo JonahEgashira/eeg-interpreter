@@ -126,3 +126,13 @@ export async function getConversationImagesDir(conversationId: string): Promise<
     throw error
   }
 }
+
+export async function loadBase64Data(figurePath: string): Promise<string | null> {
+  try {
+    const result = await window.api.loadBase64Data(figurePath)
+    return result
+  } catch (error) {
+    console.error('Error loading base64 data at ipcFunctions:', error)
+    throw error
+  }
+}

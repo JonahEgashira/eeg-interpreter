@@ -98,7 +98,6 @@ export async function runPythonCode(
           try {
             const { figurePath } = await handleFigureData(imageData, figuresDirectoryPath)
             figurePaths.push(figurePath)
-            output += `<img src="data:image/png;base64,${imageData}" alt="Python Output Image" />`
           } catch (error) {
             console.error('Error handling figure data:', error)
           }

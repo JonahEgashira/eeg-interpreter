@@ -31,6 +31,7 @@ interface CustomAPI {
   }>
   deleteConversation: (id: string) => Promise<{ success: boolean; error?: CustomError }>
   getConversationImagesDir: (conversationId: string) => Promise<string>
+  loadBase64Data: (figurePath: string) => Promise<string | null>
 }
 
 declare global {

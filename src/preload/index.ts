@@ -53,7 +53,10 @@ const api = {
     ipcRenderer.invoke('delete-conversation', id),
 
   getConversationImagesDir: (conversationId: string): Promise<string> =>
-    ipcRenderer.invoke('get-conversation-images-dir', conversationId)
+    ipcRenderer.invoke('get-conversation-images-dir', conversationId),
+
+  loadBase64Data: (figurePath: string): Promise<string | null> =>
+    ipcRenderer.invoke('load-base64-data', figurePath)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

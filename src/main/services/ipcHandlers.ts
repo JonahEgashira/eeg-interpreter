@@ -9,6 +9,7 @@ import {
   deleteConversation,
   getConversationImagesDir
 } from './jsonFileHandler'
+import { loadBase64Data } from './figureHandler'
 import { Conversation, ExecutionResult, Message } from '@shared/types/chat'
 import * as dotenv from 'dotenv'
 
@@ -111,6 +112,15 @@ export function setupIpcHandlers(): void {
     } catch (error) {
       console.error('Error getting conversation images dir:', error)
       return { success: false, error }
+    }
+  })
+
+  ipcMain.handle('load-base64-data', async (_, figurePath: string) => {
+    try {
+      return await loadBase64Data(figurePath)
+    } catch (error) {
+      console.error('Error loading base64 data:', error)
+      return null
     }
   })
 }

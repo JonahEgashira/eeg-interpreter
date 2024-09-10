@@ -15,12 +15,12 @@ const baseConversationDir = path.join(app.getPath('userData'), 'conversations')
 
 async function createConversationFolders(conversationId: string): Promise<void> {
   const conversationDir = path.join(baseConversationDir, conversationId)
-  const imagesDir = path.join(conversationDir, 'base64')
+  const figuresDir = path.join(conversationDir, 'base64')
   const filesDir = path.join(conversationDir, 'files')
 
   try {
     await fs.mkdir(conversationDir, { recursive: true })
-    await fs.mkdir(imagesDir, { recursive: true })
+    await fs.mkdir(figuresDir, { recursive: true })
     await fs.mkdir(filesDir, { recursive: true })
   } catch (error) {
     console.error('Error creating conversation directories:', error)
@@ -37,7 +37,7 @@ function getConversationFilePath(conversationId: string): string {
 }
 
 export function getConversationImagesDir(conversationId: string): string {
-  return path.join(getConversationDir(conversationId), 'images')
+  return path.join(getConversationDir(conversationId), 'base64')
 }
 
 export async function saveConversation(conversation: Conversation): Promise<void> {
