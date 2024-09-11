@@ -4,6 +4,7 @@ import rehypeRaw from 'rehype-raw'
 import { Conversation, Message, ExecutionResult } from '@shared/types/chat'
 import Markdown from 'react-markdown'
 import CodeBlock from './CodeBlock'
+import { loadBase64Data } from '@renderer/lib/ipcFunctions'
 
 interface MessageAreaProps {
   conversation: Conversation
@@ -25,6 +26,27 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
         [messageId]: base64
       }))
     }, [])
+
+    useEffect(() => {
+      const loadImagesForMessages = async () => {
+        const imagePromises = messages.map(async (message) => {
+          const executionResult = message.executionResults?.[0]
+          if (executionResult?.figurePaths) {
+            const base64Images = (
+              await Promise.all(executionResult.figurePaths.map(loadBase64Data))
+            ).filter((base64) => base64 !== null) as string[]
+
+            if (base64Images.length > 0) {
+              handleBase64Update(message.id, base64Images)
+            }
+          }
+        })
+
+        await Promise.all(imagePromises)
+      }
+
+      loadImagesForMessages()
+    }, [messages, handleBase64Update])
 
     useEffect(() => {
       if (isStreaming && messageAreaRef.current) {
