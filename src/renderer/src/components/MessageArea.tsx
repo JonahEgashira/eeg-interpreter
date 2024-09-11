@@ -20,7 +20,6 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
     const [base64Images, setBase64Images] = useState<Record<number, string[]>>({})
 
     const handleBase64Update = useCallback((messageId: number, base64: string[]) => {
-      console.log('updating base64')
       setBase64Images((prevState) => ({
         ...prevState,
         [messageId]: base64

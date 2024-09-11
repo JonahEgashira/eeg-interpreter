@@ -9,6 +9,7 @@ import { addMessage, ExecutionResult } from '@shared/types/chat'
 import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
 import ChatInterface from './components/ChatInterface'
 import { prompts, replacePlaceholders } from './lib/config/prompts'
+import { useCallback } from 'react'
 
 const App = (): JSX.Element => {
   const [input, setInput] = React.useState<string>('')
@@ -44,7 +45,7 @@ const App = (): JSX.Element => {
     textareaRef.current?.focus()
   }, [currentConversation])
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       const result = await listConversations()
       if (result.success && result.conversations) {
@@ -55,7 +56,7 @@ const App = (): JSX.Element => {
     } catch (error) {
       console.error('Error loading conversations:', error)
     }
-  }
+  }, [])
 
   const handleNewConversation = async () => {
     setCurrentConversation(null)
@@ -75,7 +76,7 @@ const App = (): JSX.Element => {
     }
   }
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     const userMessage = input.trim()
     if (!userMessage || !openaiApiKey) return
 
@@ -178,9 +179,9 @@ const App = (): JSX.Element => {
       setIsStreaming(false)
       textareaRef.current?.focus()
     }
-  }
+  }, [input, openaiApiKey, currentConversation])
 
-  const handleExecutionResult = (messageId: number, result: ExecutionResult) => {
+  const handleExecutionResult = useCallback((messageId: number, result: ExecutionResult) => {
     setCurrentConversation((prevConversation) => {
       if (!prevConversation) return null
       const updatedMessages = prevConversation.messages.map((message) =>
@@ -192,7 +193,7 @@ const App = (): JSX.Element => {
       saveConversation(updatedConversation)
       return updatedConversation
     })
-  }
+  }, [])
 
   return (
     <div className="flex w-full h-screen bg-gray-100">
