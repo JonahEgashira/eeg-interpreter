@@ -5,7 +5,7 @@ import { getEnvVar, saveConversation } from './lib/ipcFunctions'
 import { createOpenAI } from '@ai-sdk/openai'
 import { InputSchema } from './lib/chat/inputSchema'
 import Sidebar from './components/Sidebar'
-import { addMessage } from '@shared/types/chat'
+import { addMessage, ExecutionResult } from '@shared/types/chat'
 import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
 import ChatInterface from './components/ChatInterface'
 import { prompts, replacePlaceholders } from './lib/config/prompts'
@@ -180,6 +180,20 @@ const App = (): JSX.Element => {
     }
   }
 
+  const handleExecutionResult = (messageId: number, result: ExecutionResult) => {
+    setCurrentConversation((prevConversation) => {
+      if (!prevConversation) return null
+      const updatedMessages = prevConversation.messages.map((message) =>
+        message.id === messageId
+          ? { ...message, executionResults: [...(message.executionResults || []), result] }
+          : message
+      )
+      const updatedConversation = { ...prevConversation, messages: updatedMessages }
+      saveConversation(updatedConversation)
+      return updatedConversation
+    })
+  }
+
   return (
     <div className="flex w-full h-screen bg-gray-100">
       <Sidebar
@@ -193,6 +207,7 @@ const App = (): JSX.Element => {
         input={input}
         setInput={setInput}
         handleSendMessage={handleSendMessage}
+        handleExecutionResult={handleExecutionResult}
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
       />

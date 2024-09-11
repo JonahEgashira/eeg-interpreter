@@ -15,13 +15,14 @@ interface CodeBlockProps {
   conversation: Conversation
   messageId: number
   code: string
+  handleExecutionResult: (messageId: number, result: ExecutionResult) => void
   language: string
   inline: boolean
   index: number
 }
 
 const CodeBlock: React.FC<CodeBlockProps> = memo(
-  ({ conversation, messageId, code, language, inline, index }) => {
+  ({ conversation, messageId, code, handleExecutionResult, language, inline, index }) => {
     const [result, setResult] = useState<ExecutionResult | null>(null)
     const [base64Figures, setBase64Figures] = useState<string[]>([])
 
@@ -55,12 +56,14 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
           ) as string[]
           setBase64Figures(base64Images)
         }
+        handleExecutionResult(messageId, result)
       } catch (error) {
         const result: ExecutionResult = {
           code,
           error: (error as Error).message
         }
         setResult(result)
+        handleExecutionResult(messageId, result)
       }
     }
 

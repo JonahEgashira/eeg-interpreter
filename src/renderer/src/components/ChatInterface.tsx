@@ -1,5 +1,5 @@
 import React from 'react'
-import { Conversation } from '@shared/types/chat'
+import { Conversation, ExecutionResult } from '@shared/types/chat'
 import MessageArea from './MessageArea'
 import InputArea from './InputArea'
 
@@ -8,6 +8,7 @@ interface ChatInterfaceProps {
   input: string
   setInput: React.Dispatch<React.SetStateAction<string>>
   handleSendMessage: () => void
+  handleExecutionResult: (messageId: number, result: ExecutionResult) => void
   isStreaming: boolean
   openaiApiKey: string | null
 }
@@ -17,6 +18,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   input,
   setInput,
   handleSendMessage,
+  handleExecutionResult,
   isStreaming,
   openaiApiKey
 }) => {
@@ -29,6 +31,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               conversation={currentConversation}
               messages={currentConversation.messages}
               isStreaming={isStreaming}
+              handleExecutionResult={handleExecutionResult}
             />
           ) : (
             <div className="flex items-center justify-center h-full">
