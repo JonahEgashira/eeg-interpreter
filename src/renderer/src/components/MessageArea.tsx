@@ -13,18 +13,25 @@ interface MessageAreaProps {
   handleExecutionResult: (messageId: number, result: ExecutionResult) => void
 }
 
+const conversationMessageId = (conversationId: string, messageId: number) =>
+  `${conversationId}-${messageId}`
+
 const MessageArea: React.FC<MessageAreaProps> = memo(
   ({ conversation, messages, isStreaming, handleExecutionResult }) => {
     const messageAreaRef = useRef<HTMLDivElement>(null)
 
-    const [base64Images, setBase64Images] = useState<Record<number, string[]>>({})
+    const [base64Images, setBase64Images] = useState<Record<string, string[]>>({})
 
-    const handleBase64Update = useCallback((messageId: number, base64: string[]) => {
-      setBase64Images((prevState) => ({
-        ...prevState,
-        [messageId]: base64
-      }))
-    }, [])
+    const handleBase64Update = useCallback(
+      (conversationId: string, messageId: number, base64: string[]) => {
+        const key = conversationMessageId(conversationId, messageId)
+        setBase64Images((prevState) => ({
+          ...prevState,
+          [key]: base64
+        }))
+      },
+      []
+    )
 
     useEffect(() => {
       const loadImagesForMessages = async () => {
@@ -36,7 +43,7 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
             ).filter((base64) => base64 !== null) as string[]
 
             if (base64Images.length > 0) {
-              handleBase64Update(message.id, base64Images)
+              handleBase64Update(conversation.id, message.id, base64Images)
             }
           }
         })
@@ -86,7 +93,9 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
                           language={language}
                           inline={inline}
                           index={index}
-                          base64Images={base64Images[message.id] || []}
+                          base64Images={
+                            base64Images[conversationMessageId(conversation.id, message.id)] || []
+                          }
                           handleBase64Update={handleBase64Update}
                           {...rest}
                         />

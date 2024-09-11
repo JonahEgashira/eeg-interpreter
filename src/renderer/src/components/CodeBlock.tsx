@@ -20,14 +20,14 @@ interface CodeBlockProps {
   inline: boolean
   index: number
   base64Images: string[]
-  handleBase64Update: (messageId: number, base64: string[]) => void
+  handleBase64Update: (conversationId: string, messageId: number, base64: string[]) => void
 }
 
-const ImageDisplay = memo(({ base64 }: { base64: string }) => (
+const ImageDisplay = memo(({ index, base64 }: { index: number; base64: string }) => (
   <div className="flex flex-col items-start mb-2">
     <a
       href={`data:image/png;base64,${base64}`}
-      download={`figure.png`}
+      download={`${Date.now()}-${index}.png`}
       className="my-2 self-end p-1 text-black underline flex items-center"
     >
       <Download size={20} />
@@ -66,7 +66,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
           const base64Images = (await Promise.all(result.figurePaths.map(loadBase64Data))).filter(
             (base64) => base64 !== null
           ) as string[]
-          handleBase64Update(messageId, base64Images)
+          handleBase64Update(conversation.id, messageId, base64Images)
         }
         handleExecutionResult(messageId, result)
       } catch (error) {
@@ -117,7 +117,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
             </div>
             <div className="grid grid-cols-1 gap-2">
               {base64Images.map((base64, i) => (
-                <ImageDisplay key={i} base64={base64} />
+                <ImageDisplay key={i} index={i} base64={base64} />
               ))}
             </div>
           </div>
