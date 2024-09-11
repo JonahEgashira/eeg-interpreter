@@ -124,7 +124,7 @@ const App = (): JSX.Element => {
       const systemPrompt = prompts.system
 
       const result = await streamText({
-        model: openai('gpt-4o'),
+        model: openai('gpt-4o-mini'),
         system: systemPrompt,
         messages: updatedConversation.messages
       })

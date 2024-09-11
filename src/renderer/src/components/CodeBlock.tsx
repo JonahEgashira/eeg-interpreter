@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useMemo, memo } from 'react'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
 import { Play, Download } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -19,9 +19,11 @@ interface CodeBlockProps {
   language: string
   inline: boolean
   index: number
+  base64Images: string[]
+  handleBase64Update: (messageId: number, base64: string[]) => void
 }
 
-const ImageDisplay = ({ base64 }: { base64: string }) => (
+const ImageDisplay = memo(({ base64 }: { base64: string }) => (
   <div className="flex flex-col items-start mb-2">
     <a
       href={`data:image/png;base64,${base64}`}
@@ -32,102 +34,99 @@ const ImageDisplay = ({ base64 }: { base64: string }) => (
     </a>
     <img src={`data:image/png;base64,${base64}`} alt="figure" className="max-w-full" />
   </div>
-)
+))
 
-const CodeBlock: React.FC<CodeBlockProps> = ({
-  conversation,
-  messageId,
-  code,
-  handleExecutionResult,
-  language,
-  inline,
-  index
-}) => {
-  const [base64Figures, setBase64Figures] = useState<string[]>([])
+ImageDisplay.displayName = 'ImageDisplay'
 
-  const executionResult = useMemo(() => {
-    return conversation?.messages.find(
-      (message) => message.id === messageId && message.executionResults
-    )?.executionResults?.[0]
-  }, [conversation, messageId])
+const CodeBlock: React.FC<CodeBlockProps> = memo(
+  ({
+    conversation,
+    messageId,
+    code,
+    handleExecutionResult,
+    language,
+    inline,
+    index,
+    base64Images,
+    handleBase64Update
+  }) => {
+    const executionResult = useMemo(() => {
+      return conversation?.messages.find(
+        (message) => message.id === messageId && message.executionResults
+      )?.executionResults?.[0]
+    }, [conversation, messageId])
 
-  useEffect(() => {
-    console.log('called')
-    if (executionResult?.figurePaths && executionResult.figurePaths.length > 0) {
-      Promise.all(executionResult.figurePaths.map(loadBase64Data)).then((base64Images) => {
-        const filteredImages = base64Images.filter((base64) => base64 !== null) as string[]
-        setBase64Figures(filteredImages)
-      })
-    } else {
-      setBase64Figures([])
-    }
-  }, [executionResult])
+    const handleRun = async () => {
+      try {
+        const figureDir = await getConversationImagesDir(conversation.id)
+        const result = await runPythonCode(figureDir, code)
+        await saveConversationWithPythonResult(conversation, messageId, result)
 
-  const handleRun = async () => {
-    try {
-      const figureDir = await getConversationImagesDir(conversation.id)
-      const result = await runPythonCode(figureDir, code)
-      await saveConversationWithPythonResult(conversation, messageId, result)
-
-      if (result.figurePaths) {
-        const base64Images = (await Promise.all(result.figurePaths.map(loadBase64Data))).filter(
-          (base64) => base64 !== null
-        ) as string[]
-        setBase64Figures(base64Images)
+        if (result.figurePaths) {
+          const base64Images = (await Promise.all(result.figurePaths.map(loadBase64Data))).filter(
+            (base64) => base64 !== null
+          ) as string[]
+          handleBase64Update(messageId, base64Images)
+        }
+        handleExecutionResult(messageId, result)
+      } catch (error) {
+        const result: ExecutionResult = {
+          code,
+          error: (error as Error).message
+        }
+        handleExecutionResult(messageId, result)
       }
-      handleExecutionResult(messageId, result)
-    } catch (error) {
-      const result: ExecutionResult = {
-        code,
-        error: (error as Error).message
-      }
-      handleExecutionResult(messageId, result)
     }
-  }
 
-  if (inline) {
+    if (inline) {
+      return (
+        <code key={index} className="bg-gray-300 rounded px-1 py-0.5 text-sm">
+          {code}
+        </code>
+      )
+    }
+
     return (
-      <code key={index} className="bg-gray-300 rounded px-1 py-0.5 text-sm">
-        {code}
-      </code>
+      <div>
+        {language === 'python' && (
+          <div className="flex justify-between items-center mb-2 mt-6">
+            <span className="text-sm font-bold">Python</span>
+            <button
+              onClick={handleRun}
+              className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
+            >
+              <Play size={18} />
+            </button>
+          </div>
+        )}
+        <SyntaxHighlighter PreTag="div" style={oneLight} language={language}>
+          {code}
+        </SyntaxHighlighter>
+        {language === 'python' && executionResult?.output && (
+          <div className="mt-2 p-2 bg-gray-100 rounded">
+            <div className="mb-2">
+              <strong>Output</strong>
+            </div>
+            <div dangerouslySetInnerHTML={{ __html: executionResult.output }} />
+          </div>
+        )}
+        {language === 'python' && base64Images.length > 0 && (
+          <div className="mt-2 p-2 bg-gray-100 rounded">
+            <div>
+              <strong>Figures</strong>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {base64Images.map((base64, i) => (
+                <ImageDisplay key={i} base64={base64} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     )
   }
+)
 
-  return (
-    <div>
-      {language === 'python' && (
-        <div className="flex justify-between items-center mb-2 mt-6">
-          <span className="text-sm font-bold">Python</span>
-          <button onClick={handleRun} className="px-2 py-1 bg-blue-500 text-white text-xs rounded">
-            <Play size={18} />
-          </button>
-        </div>
-      )}
-      <SyntaxHighlighter PreTag="div" style={oneLight} language={language}>
-        {code}
-      </SyntaxHighlighter>
-      {language === 'python' && executionResult?.output && (
-        <div className="mt-2 p-2 bg-gray-100 rounded">
-          <div className="mb-2">
-            <strong>Output</strong>
-          </div>
-          <div dangerouslySetInnerHTML={{ __html: executionResult.output }} />
-        </div>
-      )}
-      {language === 'python' && base64Figures.length > 0 && (
-        <div className="mt-2 p-2 bg-gray-100 rounded">
-          <div>
-            <strong>Figures</strong>
-          </div>
-          <div className="grid grid-cols-1 gap-2">
-            {base64Figures.map((base64, i) => (
-              <ImageDisplay key={i} base64={base64} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+CodeBlock.displayName = 'CodeBlock'
 
 export default CodeBlock
