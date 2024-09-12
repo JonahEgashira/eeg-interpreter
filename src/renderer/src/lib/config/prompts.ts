@@ -7,6 +7,7 @@ export const prompts = {
     3. Ensure the code is well-commented, especially for complex sections, providing clear explanations where needed.
     4. Include strong error handling and input validation. Make sure the script gracefully handles incorrect or unexpected input.
     5. When generating graphs or plots, ensure all titles, axis labels, and legends are written in English for clarity.
+    6. Do not include any instructions or code to save figures (e.g., avoid using plt.savefig()) and focus on displaying the figures directly using plt.show().
 
     Additionally, keep the code efficient, readable, and maintainable.
   `,
