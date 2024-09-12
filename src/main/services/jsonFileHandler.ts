@@ -12,6 +12,38 @@ import {
 import { app } from 'electron'
 
 const baseConversationDir = path.join(app.getPath('userData'), 'conversations')
+const settingsFilePath = path.join(app.getPath('userData'), 'settings.json')
+
+export async function getSettingsFromFile(): Promise<Record<string, string> | null> {
+  try {
+    const jsonString = await fs.readFile(settingsFilePath, 'utf-8')
+    return JSON.parse(jsonString)
+  } catch {
+    return null
+  }
+}
+
+export async function getSetting(key: string): Promise<string | null> {
+  const settings = await getSettingsFromFile()
+  return settings?.[key] || null
+}
+
+export async function saveSettingsToFile(newSettings: Record<string, string>): Promise<void> {
+  try {
+    let settings = await getSettingsFromFile()
+    if (!settings) {
+      settings = {}
+    }
+
+    settings = { ...settings, ...newSettings }
+
+    const jsonString = JSON.stringify(settings, null, 2)
+    await fs.writeFile(settingsFilePath, jsonString, { encoding: 'utf-8' })
+  } catch (error) {
+    console.error('Error writing to settings.json:', error)
+    throw error
+  }
+}
 
 async function createConversationFolders(conversationId: string): Promise<void> {
   const conversationDir = path.join(baseConversationDir, conversationId)

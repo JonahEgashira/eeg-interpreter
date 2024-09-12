@@ -2,12 +2,14 @@ import { ipcMain } from 'electron'
 import { runPythonCode, saveConversationWithPythonResult } from './pythonHandler'
 import {
   saveConversation,
+  saveSettingsToFile,
   loadConversation,
   appendMessage,
   createNewConversation,
   listConversations,
   deleteConversation,
-  getConversationImagesDir
+  getConversationImagesDir,
+  getSettingsFromFile
 } from './jsonFileHandler'
 import { loadBase64Data } from './figureHandler'
 import { Conversation, ExecutionResult, Message } from '@shared/types/chat'
@@ -37,6 +39,25 @@ export function setupIpcHandlers(): void {
       }
     }
   )
+
+  ipcMain.handle('get-settings-from-file', async () => {
+    try {
+      return await getSettingsFromFile()
+    } catch (error) {
+      console.error('Error loading settings from file:', error)
+      return null
+    }
+  })
+
+  ipcMain.handle('save-settings-to-file', async (_, settings: Record<string, string>) => {
+    try {
+      await saveSettingsToFile(settings)
+      return { success: true }
+    } catch (error) {
+      console.error('Error saving settings to file:', error)
+      return { success: false, error }
+    }
+  })
 
   const allowedEnvVars = ['OPENAI_API_KEY']
   ipcMain.handle('get-env-vars', (_, key: string) => {

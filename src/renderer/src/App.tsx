@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { streamText, generateText } from 'ai'
 import { Message, Conversation } from '@shared/types/chat'
-import { getEnvVar, saveConversation } from './lib/ipcFunctions'
+import { saveConversation } from './lib/ipcFunctions'
 import { createOpenAI } from '@ai-sdk/openai'
 import { InputSchema } from './lib/chat/inputSchema'
 import ConversationsHistory from './components/Sidebar'
@@ -12,6 +12,7 @@ import { loadConversation, createNewConversation, listConversations } from './li
 import ChatInterface from './components/ChatInterface'
 import { prompts, replacePlaceholders } from './lib/config/prompts'
 import { useCallback } from 'react'
+import { getSettingsFromFile } from './lib/ipcFunctions'
 
 const App = (): JSX.Element => {
   const [input, setInput] = React.useState<string>('')
@@ -27,8 +28,10 @@ const App = (): JSX.Element => {
   React.useEffect(() => {
     const fetchOpenaiApiKey = async () => {
       try {
-        const apiKey = await getEnvVar('OPENAI_API_KEY')
-        setOpenaiApiKey(apiKey)
+        const settings = await getSettingsFromFile()
+        if (settings && settings.openai_key) {
+          setOpenaiApiKey(settings.openai_key)
+        }
       } catch (error) {
         console.error('Error fetching OpenAI API key:', error)
       }
@@ -202,9 +205,14 @@ const App = (): JSX.Element => {
     setActiveTab((prevTab) => (prevTab === tab ? null : tab))
   }
 
+  const handleApiKeyChange = (newApiKey: string) => {
+    setOpenaiApiKey(newApiKey)
+    console.log('New API Key saved:', newApiKey)
+  }
+
   const renderContent = () => {
-    if (activeTab === 'settings') {
-      return <Settings apiKey={openaiApiKey} />
+    if (activeTab === 'settings' || !openaiApiKey) {
+      return <Settings onApiKeyChange={handleApiKeyChange} />
     }
 
     if (activeTab === 'conversations') {

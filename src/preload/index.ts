@@ -22,6 +22,14 @@ const api = {
 
   getEnvVar: (key: string): Promise<string | null> => ipcRenderer.invoke('get-env-vars', key),
 
+  getSettingsFromFile: (): Promise<Record<string, string> | null> =>
+    ipcRenderer.invoke('get-settings-from-file'),
+
+  saveSettingsToFile: (
+    settings: Record<string, string>
+  ): Promise<{ success: boolean; error?: CustomError }> =>
+    ipcRenderer.invoke('save-settings-to-file', settings),
+
   saveConversation: (
     conversation: Conversation
   ): Promise<{ success: boolean; error?: CustomError }> =>

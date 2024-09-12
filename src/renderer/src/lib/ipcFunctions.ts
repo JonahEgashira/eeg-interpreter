@@ -32,6 +32,28 @@ export async function saveConversationWithPythonResult(
   }
 }
 
+export async function getSettingsFromFile(): Promise<Record<string, string> | null> {
+  try {
+    const settings = await window.api.getSettingsFromFile()
+    return settings
+  } catch (error) {
+    console.error('Error getting settings from file at ipcFunctions:', error)
+    return null
+  }
+}
+
+export async function saveSettingsToFile(
+  settings: Record<string, string>
+): Promise<{ success: boolean; error?: CustomError }> {
+  try {
+    const result = await window.api.saveSettingsToFile(settings)
+    return result
+  } catch (error) {
+    console.error('Error saving settings to file at ipcFunctions:', error)
+    return { success: false, error: { message: (error as Error).message } }
+  }
+}
+
 export async function getEnvVar(key: string): Promise<string | null> {
   try {
     const value = await window.api.getEnvVar(key)

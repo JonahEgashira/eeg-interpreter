@@ -10,6 +10,10 @@ interface CustomAPI {
     messageId: number,
     executionResult: ExecutionResult
   ) => Promise<{ success: boolean; error?: CustomError }>
+  getSettingsFromFile: () => Promise<Record<string, string> | null>
+  saveSettingsToFile: (
+    settings: Record<string, string>
+  ) => Promise<{ success: boolean; error?: CustomError }>
   getEnvVar: (key: string) => Promise<string | null>
   saveConversation: (
     conversation: Conversation
