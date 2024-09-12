@@ -4,8 +4,9 @@ import { Message, Conversation } from '@shared/types/chat'
 import { getEnvVar, saveConversation } from './lib/ipcFunctions'
 import { createOpenAI } from '@ai-sdk/openai'
 import { InputSchema } from './lib/chat/inputSchema'
-import Sidebar from './components/Sidebar'
+import ConversationsHistory from './components/Sidebar'
 import SidebarNavigation from './components/SidebarNavitation'
+import Settings from './components/Settings'
 import { addMessage, ExecutionResult } from '@shared/types/chat'
 import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
 import ChatInterface from './components/ChatInterface'
@@ -201,27 +202,34 @@ const App = (): JSX.Element => {
     setActiveTab((prevTab) => (prevTab === tab ? null : tab))
   }
 
-  const renderSidebarContent = () => {
-    if (!activeTab) return null
-    switch (activeTab) {
-      case 'conversations':
-        return (
-          <Sidebar
+  const renderContent = () => {
+    if (activeTab === 'settings') {
+      return <Settings apiKey={openaiApiKey} />
+    }
+
+    if (activeTab === 'conversations') {
+      return (
+        <>
+          <ConversationsHistory
             conversations={conversations}
             currentConversationId={currentConversation?.id}
             onNewConversation={handleNewConversation}
             onLoadConversation={handleLoadConversation}
           />
-        )
-      default:
-        return null
+          <ChatInterface
+            currentConversation={currentConversation}
+            input={input}
+            setInput={setInput}
+            handleSendMessage={handleSendMessage}
+            handleExecutionResult={handleExecutionResult}
+            isStreaming={isStreaming}
+            openaiApiKey={openaiApiKey}
+          />
+        </>
+      )
     }
-  }
 
-  return (
-    <div className="flex w-full h-screen bg-gray-100">
-      <SidebarNavigation activeTab={activeTab} onTabChange={handleTabChange} />
-      <div>{renderSidebarContent()}</div>
+    return (
       <ChatInterface
         currentConversation={currentConversation}
         input={input}
@@ -231,6 +239,13 @@ const App = (): JSX.Element => {
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
       />
+    )
+  }
+
+  return (
+    <div className="flex w-full h-screen bg-gray-100">
+      <SidebarNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      {renderContent()}
     </div>
   )
 }

@@ -8,7 +8,7 @@ interface SidebarProps {
   onLoadConversation: (id: string) => void
 }
 
-const Sidebar = ({
+const ConversationsHistory = ({
   conversations,
   currentConversationId,
   onNewConversation,
@@ -45,4 +45,4 @@ const Sidebar = ({
   )
 }
 
-export default Sidebar
+export default ConversationsHistory
