@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
-import { Send } from 'lucide-react'
+import { Send, Paperclip } from 'lucide-react'
 
 interface InputAreaProps {
   input: string
@@ -31,8 +31,20 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
   }
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // TODO: add file path to conversation
+      console.log('Selected file:', file)
+    }
+  }
+
   return (
     <div className="flex items-center space-x-2">
+      <label className="p-2 bg-gray-200 text-gray-700 rounded-md cursor-pointer hover:bg-gray-300 transition-colors">
+        <Paperclip size={20} />
+        <input type="file" onChange={handleFileChange} className="hidden" />
+      </label>
       <Textarea
         ref={textareaRef}
         value={input}
