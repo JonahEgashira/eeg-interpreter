@@ -13,9 +13,6 @@ import {
 } from './jsonFileHandler'
 import { loadBase64Data } from './figureHandler'
 import { Conversation, ExecutionResult, Message } from '@shared/types/chat'
-import * as dotenv from 'dotenv'
-
-dotenv.config()
 
 export function setupIpcHandlers(): void {
   ipcMain.handle('run-python-code', async (_, figuresDirectoryPath: string, code: string) => {
@@ -57,14 +54,6 @@ export function setupIpcHandlers(): void {
       console.error('Error saving settings to file:', error)
       return { success: false, error }
     }
-  })
-
-  const allowedEnvVars = ['OPENAI_API_KEY']
-  ipcMain.handle('get-env-vars', (_, key: string) => {
-    if (allowedEnvVars.includes(key)) {
-      return process.env[key]
-    }
-    return null
   })
 
   ipcMain.handle('save-conversation', async (_, conversation: Conversation) => {

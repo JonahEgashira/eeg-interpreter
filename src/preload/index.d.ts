@@ -14,7 +14,6 @@ interface CustomAPI {
   saveSettingsToFile: (
     settings: Record<string, string>
   ) => Promise<{ success: boolean; error?: CustomError }>
-  getEnvVar: (key: string) => Promise<string | null>
   saveConversation: (
     conversation: Conversation
   ) => Promise<{ success: boolean; error?: CustomError }>

@@ -20,8 +20,6 @@ const api = {
       executionResult
     ),
 
-  getEnvVar: (key: string): Promise<string | null> => ipcRenderer.invoke('get-env-vars', key),
-
   getSettingsFromFile: (): Promise<Record<string, string> | null> =>
     ipcRenderer.invoke('get-settings-from-file'),
 

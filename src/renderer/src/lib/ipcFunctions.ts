@@ -54,16 +54,6 @@ export async function saveSettingsToFile(
   }
 }
 
-export async function getEnvVar(key: string): Promise<string | null> {
-  try {
-    const value = await window.api.getEnvVar(key)
-    return value
-  } catch (error) {
-    console.error('Error getting environment variable at ipcFunctions:', error)
-    throw error
-  }
-}
-
 export async function saveConversation(
   conversation: Conversation
 ): Promise<{ success: boolean; error?: CustomError }> {
