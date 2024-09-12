@@ -5,6 +5,7 @@ import { getEnvVar, saveConversation } from './lib/ipcFunctions'
 import { createOpenAI } from '@ai-sdk/openai'
 import { InputSchema } from './lib/chat/inputSchema'
 import Sidebar from './components/Sidebar'
+import SidebarNavigation from './components/SidebarNavitation'
 import { addMessage, ExecutionResult } from '@shared/types/chat'
 import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
 import ChatInterface from './components/ChatInterface'
@@ -17,6 +18,7 @@ const App = (): JSX.Element => {
   const [currentConversation, setCurrentConversation] = React.useState<Conversation | null>(null)
   const [openaiApiKey, setOpenaiApiKey] = React.useState<string | null>(null)
   const [isStreaming, setIsStreaming] = React.useState(false)
+  const [activeTab, setActiveTab] = React.useState<string | null>(null)
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
   const messageAreaRef = React.useRef<HTMLDivElement>(null)
@@ -195,14 +197,31 @@ const App = (): JSX.Element => {
     })
   }, [])
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab((prevTab) => (prevTab === tab ? null : tab))
+  }
+
+  const renderSidebarContent = () => {
+    if (!activeTab) return null
+    switch (activeTab) {
+      case 'conversations':
+        return (
+          <Sidebar
+            conversations={conversations}
+            currentConversationId={currentConversation?.id}
+            onNewConversation={handleNewConversation}
+            onLoadConversation={handleLoadConversation}
+          />
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="flex w-full h-screen bg-gray-100">
-      <Sidebar
-        conversations={conversations}
-        currentConversationId={currentConversation?.id}
-        onNewConversation={handleNewConversation}
-        onLoadConversation={handleLoadConversation}
-      />
+      <SidebarNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      <div>{renderSidebarContent()}</div>
       <ChatInterface
         currentConversation={currentConversation}
         input={input}
