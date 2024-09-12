@@ -18,6 +18,7 @@ export interface Conversation {
   id: string
   title: string
   messages: Message[]
+  dataFilePaths?: string[]
   createdAt: Date
   updatedAt: Date
 }
