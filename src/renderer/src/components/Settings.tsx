@@ -73,7 +73,7 @@ const Settings: React.FC<SettingsProps> = ({ onApiKeyChange }) => {
                 {maskedApiKey && !isEditing && (
                   <button
                     onClick={handleEditClick}
-                    className="absolute right-2 top-2 text-blue-500 hover:text-blue-600"
+                    className="absolute right-2 top-2 text-gray-500 hover:text-gray-600"
                   >
                     Edit
                   </button>
@@ -81,7 +81,7 @@ const Settings: React.FC<SettingsProps> = ({ onApiKeyChange }) => {
               </div>
               <button
                 onClick={handleSaveApiKey}
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors duration-300"
+                className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors duration-300"
               >
                 Save API Key
               </button>
