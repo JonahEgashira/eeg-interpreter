@@ -42,7 +42,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   return (
     <div className="flex items-center space-x-2">
       <label className="p-2 bg-gray-200 text-gray-700 rounded-md cursor-pointer hover:bg-gray-300 transition-colors">
-        <Paperclip size={20} />
+        <Paperclip size={22} />
         <input type="file" onChange={handleFileChange} className="hidden" />
       </label>
       <Textarea
@@ -63,7 +63,7 @@ const InputArea: React.FC<InputAreaProps> = ({
         className="p-2 bg-black text-white rounded-md disabled:opacity-50 hover:bg-gray-800 transition-colors"
         disabled={!input.trim() || !openaiApiKey || isStreaming}
       >
-        <Send size={20} />
+        <Send size={22} />
       </button>
     </div>
   )
