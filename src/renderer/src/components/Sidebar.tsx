@@ -37,7 +37,7 @@ const Sidebar = ({
             }`}
             onClick={() => onLoadConversation(conversation.id)}
           >
-            {conversation.title || 'New Conversation'}
+            <span className="block truncate">{conversation.title || 'New Conversation'}</span>
           </div>
         ))}
       </div>
