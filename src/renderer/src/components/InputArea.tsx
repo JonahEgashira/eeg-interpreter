@@ -6,6 +6,7 @@ interface InputAreaProps {
   input: string
   setInput: React.Dispatch<React.SetStateAction<string>>
   handleSendMessage: () => void
+  handleFileSelect: (filePaths: string[]) => void
   isStreaming: boolean
   openaiApiKey: string | null
 }
@@ -14,6 +15,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   input,
   setInput,
   handleSendMessage,
+  handleFileSelect,
   isStreaming,
   openaiApiKey
 }) => {
@@ -32,10 +34,10 @@ const InputArea: React.FC<InputAreaProps> = ({
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      // TODO: add file path to conversation
-      console.log('Selected file:', file)
+    const files = event.target.files
+    if (files) {
+      const filePaths = Array.from(files).map((file) => file.path)
+      handleFileSelect(filePaths)
     }
   }
 
@@ -43,7 +45,7 @@ const InputArea: React.FC<InputAreaProps> = ({
     <div className="flex items-center space-x-2">
       <label className="p-2 bg-gray-200 text-gray-700 rounded-md cursor-pointer hover:bg-gray-300 transition-colors">
         <Paperclip size={22} />
-        <input type="file" onChange={handleFileChange} className="hidden" />
+        <input type="file" onChange={handleFileChange} className="hidden" multiple />
       </label>
       <Textarea
         ref={textareaRef}

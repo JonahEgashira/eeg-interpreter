@@ -7,7 +7,7 @@ import {
   conversationFromJSON,
   conversationToJSON,
   createConversation,
-  addMessage
+  updateConversation
 } from '@shared/types/chat'
 import { app } from 'electron'
 
@@ -111,7 +111,7 @@ export async function createNewConversation(title: string): Promise<Conversation
 export async function appendMessage(conversationId: string, message: Message): Promise<void> {
   const conversation = await loadConversation(conversationId)
   if (conversation) {
-    const updatedConversation = addMessage(conversation, message)
+    const updatedConversation = updateConversation(conversation, message)
     await saveConversation(updatedConversation)
   } else {
     console.error(`Conversation with id ${conversationId} not found`)

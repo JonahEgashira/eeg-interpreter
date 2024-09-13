@@ -7,7 +7,7 @@ import { InputSchema } from './lib/chat/inputSchema'
 import ConversationsHistory from './components/ConversationsHistory'
 import SidebarNavigation from './components/SidebarNavitation'
 import Settings from './components/Settings'
-import { addMessage, ExecutionResult } from '@shared/types/chat'
+import { updateConversation, ExecutionResult } from '@shared/types/chat'
 import { loadConversation, createNewConversation, listConversations } from './lib/ipcFunctions'
 import ChatInterface from './components/ChatInterface'
 import { prompts, replacePlaceholders } from './lib/config/prompts'
@@ -17,9 +17,10 @@ const App = (): JSX.Element => {
   const [input, setInput] = useState<string>('')
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
+  const [currentFiles, setCurrentFiles] = useState<string[]>([])
   const [openaiApiKey, setOpenaiApiKey] = useState<string | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
-  const [activeTab, setActiveTab] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<string | null>('conversations')
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messageAreaRef = useRef<HTMLDivElement>(null)
@@ -101,9 +102,16 @@ const App = (): JSX.Element => {
       if (!result.success || !result.conversation) {
         throw new Error('Failed to create new conversation')
       }
-      return addMessage(result.conversation, userMessage)
+      return updateConversation(result.conversation, userMessage)
     } else {
-      return addMessage({ ...currentConversation }, userMessage)
+      const updatedConversation = updateConversation(
+        { ...currentConversation },
+        userMessage,
+        currentFiles
+      )
+      setCurrentFiles([])
+
+      return updatedConversation
     }
   }
 
@@ -179,7 +187,7 @@ const App = (): JSX.Element => {
       const aiMessage = await streamAIResponse(updatedConversation)
       setIsStreaming(false)
 
-      updatedConversation = addMessage(updatedConversation, aiMessage)
+      updatedConversation = updateConversation(updatedConversation, aiMessage)
       await saveConversation(updatedConversation)
 
       updateConversationsState(updatedConversation)
@@ -203,6 +211,10 @@ const App = (): JSX.Element => {
       saveConversation(updatedConversation)
       return updatedConversation
     })
+  }, [])
+
+  const handleFileSelect = useCallback((filePaths: string[]) => {
+    setCurrentFiles((prevFiles) => [...prevFiles, ...filePaths])
   }, [])
 
   const handleTabChange = (tab: string) => {
@@ -234,6 +246,7 @@ const App = (): JSX.Element => {
             setInput={setInput}
             handleSendMessage={handleSendMessage}
             handleExecutionResult={handleExecutionResult}
+            handleFileSelect={handleFileSelect}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
           />
@@ -248,6 +261,7 @@ const App = (): JSX.Element => {
         setInput={setInput}
         handleSendMessage={handleSendMessage}
         handleExecutionResult={handleExecutionResult}
+        handleFileSelect={handleFileSelect}
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
       />

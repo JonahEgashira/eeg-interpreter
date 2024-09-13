@@ -12,13 +12,14 @@ export interface Message {
   role: 'user' | 'assistant'
   content: string
   executionResults?: ExecutionResult[]
+  filePaths?: string[]
 }
 
 export interface Conversation {
   id: string
   title: string
   messages: Message[]
-  dataFilePaths?: string[]
+  filePaths: string[]
   createdAt: Date
   updatedAt: Date
 }
@@ -31,12 +32,14 @@ export type ConversationJSON = Omit<Conversation, 'createdAt' | 'updatedAt'> & {
 export function createConversation(
   id: string | null = null,
   title: string,
-  messages: Message[] = []
+  messages: Message[] = [],
+  filePaths: string[] = []
 ): Conversation {
   return {
     id: id || uuidv4(),
     title,
     messages,
+    filePaths,
     createdAt: new Date(),
     updatedAt: new Date()
   }
@@ -60,10 +63,15 @@ export function addExecutionResult(
   }
 }
 
-export function addMessage(conversation: Conversation, message: Message): Conversation {
+export function updateConversation(
+  conversation: Conversation,
+  message: Message,
+  filePaths: string[] = []
+): Conversation {
   return {
     ...conversation,
     messages: [...conversation.messages, message],
+    filePaths: [...conversation.filePaths, ...filePaths],
     updatedAt: new Date()
   }
 }

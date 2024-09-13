@@ -9,6 +9,7 @@ interface ChatInterfaceProps {
   setInput: React.Dispatch<React.SetStateAction<string>>
   handleSendMessage: () => void
   handleExecutionResult: (messageId: number, result: ExecutionResult) => void
+  handleFileSelect: (filePaths: string[]) => void
   isStreaming: boolean
   openaiApiKey: string | null
 }
@@ -19,6 +20,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   setInput,
   handleSendMessage,
   handleExecutionResult,
+  handleFileSelect,
   isStreaming,
   openaiApiKey
 }) => {
@@ -49,6 +51,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             input={input}
             setInput={setInput}
             handleSendMessage={handleSendMessage}
+            handleFileSelect={handleFileSelect}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
           />
