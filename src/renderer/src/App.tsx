@@ -109,7 +109,14 @@ const App = (): JSX.Element => {
       if (!result.success || !result.conversation) {
         throw new Error('Failed to create new conversation')
       }
-      return updateConversation(result.conversation, userMessage, selectedFiles)
+      const updatedConversation = updateConversation(
+        result.conversation,
+        userMessage,
+        selectedFiles
+      )
+      setSelectedFiles([])
+
+      return updatedConversation
     } else {
       const updatedConversation = updateConversation(
         { ...currentConversation },
@@ -127,11 +134,18 @@ const App = (): JSX.Element => {
       throw new Error('OpenAI API Key not set')
     }
 
+    const messagesWithFiles = conversation.messages.map((message) => {
+      if (message.filePaths && message.filePaths.length > 0) {
+        return { ...message, content: message.content + message.filePaths.join('\n') }
+      }
+      return message
+    })
+
     const openai = createOpenAI({ apiKey: openaiApiKey })
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       system: prompts.system,
-      messages: conversation.messages
+      messages: messagesWithFiles
     })
 
     let fullResponse = ''
@@ -179,14 +193,19 @@ const App = (): JSX.Element => {
     try {
       const parsedUserMessage = InputSchema.parse({ input: userMessage })
       const userMessageId = (currentConversation?.messages.length || 0) + 1
+      const userInput = parsedUserMessage.input
+
       const newUserMessage: Message = {
         id: userMessageId,
         role: 'user',
-        content: parsedUserMessage.input,
+        content: userInput,
         filePaths: selectedFiles
       }
 
-      let updatedConversation = await createOrUpdateConversation(newUserMessage)
+      let updatedConversation = await createOrUpdateConversation({
+        ...newUserMessage,
+        content: userInput
+      })
 
       setCurrentConversation(updatedConversation)
       setInput('')
