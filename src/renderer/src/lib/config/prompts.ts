@@ -8,11 +8,12 @@ export const prompts = {
     The EEG file will be provided to you as an absolute file path.
     When the user provides the file, your first step should be to write code that reads the file (e.g., using head() or similar operations) to understand its schema.
     Once the user runs this code and provides you with the schema, write the appropriate EEG processing code based on the user's request.
+    Again, make sure the program is complete and ready to run, and there must be only one program per message.
   `,
   python: `
     You are a helpful python assistant.
     You are running on a local machine, and you will create python code that will be executed on the user's machine.
-    Make sure the program is complete and ready to run.
+    Make sure the program is complete and ready to run, and there must be only one program per message.
   `,
   titleGeneration: `
     Based on the following conversation, generate a concise, descriptive, and engaging title that accurately reflects the main topic or objective discussed. The title should:

@@ -37,10 +37,9 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
     useEffect(() => {
       const loadImagesForMessages = async () => {
         const imagePromises = messages.map(async (message) => {
-          const executionResult = message.executionResults?.[0]
-          if (executionResult?.figurePaths) {
+          if (message.executionResult?.figurePaths) {
             const base64Images = (
-              await Promise.all(executionResult.figurePaths.map(loadBase64Data))
+              await Promise.all(message.executionResult.figurePaths.map(loadBase64Data))
             ).filter((base64) => base64 !== null) as string[]
 
             if (base64Images.length > 0) {

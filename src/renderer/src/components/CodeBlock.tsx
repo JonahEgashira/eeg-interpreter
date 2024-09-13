@@ -52,8 +52,8 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
   }) => {
     const executionResult = useMemo(() => {
       return conversation?.messages.find(
-        (message) => message.id === messageId && message.executionResults
-      )?.executionResults?.[0]
+        (message) => message.id === messageId && message.executionResult
+      )?.executionResult
     }, [conversation, messageId])
 
     const handleRun = async () => {
@@ -70,9 +70,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         }
         handleExecutionResult(messageId, result)
       } catch (error) {
-        const result: ExecutionResult = {
-          code
-        }
+        const result: ExecutionResult = { code }
         handleExecutionResult(messageId, result)
       }
     }

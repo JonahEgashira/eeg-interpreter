@@ -10,7 +10,7 @@ export interface Message {
   id: number
   role: 'user' | 'assistant'
   content: string
-  executionResults?: ExecutionResult[]
+  executionResult?: ExecutionResult
   filePaths?: string[]
 }
 
@@ -55,7 +55,7 @@ export function addExecutionResult(
       message.id === messageId
         ? {
             ...message,
-            executionResults: [...(message.executionResults || []), result]
+            executionResult: result
           }
         : message
     )
