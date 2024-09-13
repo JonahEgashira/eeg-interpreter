@@ -1,15 +1,16 @@
-import { spawn, ChildProcess } from 'child_process'
-import { KernelManager, ServerConnection, Kernel } from '@jupyterlab/services'
+import { spawn, ChildProcess, exec } from 'child_process'
+import fs from 'fs'
+import path from 'path'
+import { KernelManager, ServerConnection } from '@jupyterlab/services'
 import { app } from 'electron'
 import { handleFigureData } from './figureHandler'
 import { Conversation, ExecutionResult, addExecutionResult } from '@shared/types/chat'
 import * as crypto from 'crypto'
-import { saveConversation } from './jsonFileHandler'
+import { getConversationDir, saveConversation } from './jsonFileHandler'
 
 const JUPYTER_TOKEN = crypto.randomBytes(16).toString('hex')
 const JUPYTER_PORT = 8888
 let jupyterProcess: ChildProcess | null = null
-const conversationKernels: Map<string, Kernel.IKernelConnection> = new Map()
 
 const userDataPath = app.getPath('userData')
 process.chdir(userDataPath)
@@ -83,11 +84,7 @@ export async function runPythonCode(
   })
 
   const kernelManager = new KernelManager({ serverSettings: settings })
-  let kernel = conversationKernels.get(conversationId)
-  if (!kernel) {
-    kernel = await kernelManager.startNew({ name: 'python3' })
-    conversationKernels.set(conversationId, kernel)
-  }
+  const kernel = await kernelManager.startNew({ name: 'python3' })
   const future = kernel.requestExecute({ code })
 
   return new Promise((resolve, reject) => {
@@ -119,15 +116,46 @@ export async function runPythonCode(
       }
     }
 
-    future.done
-      .then(() => {
-        const result: ExecutionResult = { code }
-        if (output) result.output = output
-        if (figurePaths.length) result.figurePaths = figurePaths
+    future.done.then(() => {
+      const result: ExecutionResult = { code }
+      if (output) result.output = output
+      if (figurePaths.length) result.figurePaths = figurePaths
 
-        resolve(result)
-      })
-      .catch((err) => reject(new Error(`Error during code execution: ${err.message}`)))
+      kernel
+        .shutdown()
+        .then(() => {
+          resolve(result)
+
+          if (figurePaths.length > 0) {
+            runSystemPython(code, conversationId)
+          }
+        })
+        .catch((err) => reject(new Error(`Error during code execution: ${err.message}`)))
+    })
+  })
+}
+
+async function runSystemPython(
+  code: string,
+  conversationId: string
+): Promise<{ stdout: string; stderr: string }> {
+  const baseDir = getConversationDir(conversationId)
+  const tempFilePath = path.join(baseDir, `${conversationId}.py`)
+
+  await fs.promises.writeFile(tempFilePath, code)
+
+  console.log('Running system Python')
+  return new Promise((resolve, reject) => {
+    exec(`python3 "${tempFilePath}"`, async (error, stdout, stderr) => {
+      await fs.promises.unlink(tempFilePath)
+
+      if (error) {
+        console.error('Python script execution error:', error)
+        return reject({ stdout, stderr })
+      }
+
+      resolve({ stdout, stderr })
+    })
   })
 }
 

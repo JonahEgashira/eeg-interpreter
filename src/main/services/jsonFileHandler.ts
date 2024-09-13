@@ -60,7 +60,7 @@ async function createConversationFolders(conversationId: string): Promise<void> 
   }
 }
 
-function getConversationDir(conversationId: string): string {
+export function getConversationDir(conversationId: string): string {
   return path.join(baseConversationDir, conversationId)
 }
 
