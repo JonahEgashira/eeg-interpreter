@@ -22,6 +22,7 @@ const InputArea: React.FC<InputAreaProps> = ({
   textAreaRef
 }) => {
   const [isComposing, setIsComposing] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     textAreaRef.current?.focus()
@@ -42,8 +43,32 @@ const InputArea: React.FC<InputAreaProps> = ({
     }
   }
 
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragging(false)
+    const files = event.dataTransfer.files
+    if (files) {
+      const filePaths = Array.from(files).map((file) => file.path)
+      handleFileSelect(filePaths)
+    }
+  }
+
   return (
-    <div className="flex items-center space-x-2">
+    <div
+      className={`flex items-center space-x-2 border ${isDragging ? 'border-blue-500' : 'border-transparent'} rounded-md`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <label className="p-2 bg-gray-200 text-gray-700 rounded-md cursor-pointer hover:bg-gray-300 transition-colors">
         <Paperclip size={22} />
         <input type="file" onChange={handleFileChange} className="hidden" multiple />
