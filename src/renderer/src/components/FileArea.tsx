@@ -19,7 +19,9 @@ const FileArea: React.FC<FileAreaProps> = ({ filePaths }) => {
               className="flex items-center p-2 mb-2 rounded cursor-pointer transition-colors duration-200 hover:bg-gray-200 text-gray-700"
             >
               <File className="mr-2 h-4 w-4" />
-              <span className="text-sm truncate">{filePath.split('/').pop()}</span>
+              <span className="text-sm truncate" title={filePath}>
+                {filePath.split('/').pop()}
+              </span>
             </li>
           ))}
         </ul>
