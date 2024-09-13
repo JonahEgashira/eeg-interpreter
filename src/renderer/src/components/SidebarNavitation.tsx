@@ -1,9 +1,15 @@
 import React from 'react'
 import { MessageCircle, Settings, File } from 'lucide-react'
 
+export enum Tab {
+  Conversations = 'conversations',
+  Files = 'files',
+  Settings = 'settings'
+}
+
 interface SidebarNavigationProps {
-  activeTab: string | null
-  onTabChange: (tab: string) => void
+  activeTab: Tab | null
+  onTabChange: (tab: Tab) => void
 }
 
 const SidebarNavigation: React.FC<SidebarNavigationProps> = ({ activeTab, onTabChange }) => {
@@ -11,22 +17,22 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({ activeTab, onTabC
     <div className="flex flex-col items-center w-16 bg-black text-white h-screen">
       <button
         className={`relative p-4 hover:bg-gray-800 ${
-          activeTab === 'conversations' ? 'bg-black' : ''
+          activeTab === Tab.Conversations ? 'bg-black' : ''
         }`}
-        onClick={() => onTabChange('conversations')}
+        onClick={() => onTabChange(Tab.Conversations)}
         title="Conversations"
       >
-        {activeTab === 'conversations' && (
+        {activeTab === Tab.Conversations && (
           <span className="absolute left-0 top-0 h-full w-1 bg-white"></span>
         )}
         <MessageCircle size={32} />
       </button>
       <button
-        className={`relative p-4 hover:bg-gray-800 ${activeTab === 'files' ? 'bg-black' : ''}`}
-        onClick={() => onTabChange('files')}
+        className={`relative p-4 hover:bg-gray-800 ${activeTab === Tab.Files ? 'bg-black' : ''}`}
+        onClick={() => onTabChange(Tab.Files)}
         title="Files"
       >
-        {activeTab === 'files' && (
+        {activeTab === Tab.Files && (
           <span className="absolute left-0 top-0 h-full w-1 bg-white"></span>
         )}
         <File size={32} />
@@ -34,11 +40,11 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({ activeTab, onTabC
 
       <div className="mt-auto">
         <button
-          className={`relative p-4 hover:bg-gray-800 ${activeTab === 'settings' ? 'bg-black' : ''}`}
-          onClick={() => onTabChange('settings')}
+          className={`relative p-4 hover:bg-gray-800 ${activeTab === Tab.Settings ? 'bg-black' : ''}`}
+          onClick={() => onTabChange(Tab.Settings)}
           title="Settings"
         >
-          {activeTab === 'settings' && (
+          {activeTab === Tab.Settings && (
             <span className="absolute left-0 top-0 h-full w-1 bg-white"></span>
           )}
           <Settings size={32} />

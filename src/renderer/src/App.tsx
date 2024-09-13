@@ -12,15 +12,18 @@ import { loadConversation, createNewConversation, listConversations } from './li
 import ChatInterface from './components/ChatInterface'
 import { prompts, replacePlaceholders } from './lib/config/prompts'
 import { getSettingsFromFile } from './lib/ipcFunctions'
+import { Tab } from './components/SidebarNavitation'
+import FileArea from './components/FileArea'
 
 const App = (): JSX.Element => {
   const [input, setInput] = useState<string>('')
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
-  const [currentFiles, setCurrentFiles] = useState<string[]>([])
+  const [conversationFiles, setConversationFiles] = useState<string[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [openaiApiKey, setOpenaiApiKey] = useState<string | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
-  const [activeTab, setActiveTab] = useState<string | null>('conversations')
+  const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messageAreaRef = useRef<HTMLDivElement>(null)
@@ -66,6 +69,8 @@ const App = (): JSX.Element => {
 
   const handleNewConversation = async () => {
     setCurrentConversation(null)
+    setSelectedFiles([])
+    setConversationFiles([])
     setInput('')
   }
 
@@ -102,14 +107,14 @@ const App = (): JSX.Element => {
       if (!result.success || !result.conversation) {
         throw new Error('Failed to create new conversation')
       }
-      return updateConversation(result.conversation, userMessage)
+      return updateConversation(result.conversation, userMessage, selectedFiles)
     } else {
       const updatedConversation = updateConversation(
         { ...currentConversation },
         userMessage,
-        currentFiles
+        selectedFiles
       )
-      setCurrentFiles([])
+      setSelectedFiles([])
 
       return updatedConversation
     }
@@ -175,7 +180,8 @@ const App = (): JSX.Element => {
       const newUserMessage: Message = {
         id: userMessageId,
         role: 'user',
-        content: parsedUserMessage.input
+        content: parsedUserMessage.input,
+        filePaths: selectedFiles
       }
 
       let updatedConversation = await createOrUpdateConversation(newUserMessage)
@@ -214,10 +220,14 @@ const App = (): JSX.Element => {
   }, [])
 
   const handleFileSelect = useCallback((filePaths: string[]) => {
-    setCurrentFiles((prevFiles) => [...prevFiles, ...filePaths])
+    if (filePaths.length > 0) {
+      setSelectedFiles((prevFiles) => [...prevFiles, ...filePaths])
+      setConversationFiles((prevFiles) => [...prevFiles, ...filePaths])
+      setActiveTab(Tab.Files)
+    }
   }, [])
 
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = (tab: Tab) => {
     setActiveTab((prevTab) => (prevTab === tab ? null : tab))
   }
 
@@ -227,11 +237,9 @@ const App = (): JSX.Element => {
   }
 
   const renderContent = () => {
-    if (activeTab === 'settings' || !openaiApiKey) {
+    if (activeTab === Tab.Settings || !openaiApiKey) {
       return <Settings onApiKeyChange={handleApiKeyChange} />
-    }
-
-    if (activeTab === 'conversations') {
+    } else if (activeTab === Tab.Conversations) {
       return (
         <>
           <ConversationsHistory
@@ -252,8 +260,23 @@ const App = (): JSX.Element => {
           />
         </>
       )
+    } else if (activeTab == Tab.Files) {
+      return (
+        <>
+          <FileArea filePaths={conversationFiles} />
+          <ChatInterface
+            currentConversation={currentConversation}
+            input={input}
+            setInput={setInput}
+            handleSendMessage={handleSendMessage}
+            handleExecutionResult={handleExecutionResult}
+            handleFileSelect={handleFileSelect}
+            isStreaming={isStreaming}
+            openaiApiKey={openaiApiKey}
+          />
+        </>
+      )
     }
-
     return (
       <ChatInterface
         currentConversation={currentConversation}
