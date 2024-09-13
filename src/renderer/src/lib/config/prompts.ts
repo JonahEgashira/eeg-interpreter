@@ -14,6 +14,7 @@ export const prompts = {
     You are a helpful python assistant.
     You are running on a local machine, and you will create python code that will be executed on the user's machine.
     Make sure the program is complete and ready to run, and there must be only one program per message.
+    The user does not have input methods like input() in a terminal. Therefore, you must obtain all the necessary information through chat interactions.
   `,
   titleGeneration: `
     Based on the following conversation, generate a concise, descriptive, and engaging title that accurately reflects the main topic or objective discussed. The title should:
