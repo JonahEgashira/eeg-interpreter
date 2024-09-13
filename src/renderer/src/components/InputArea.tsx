@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { Send, Paperclip } from 'lucide-react'
 
