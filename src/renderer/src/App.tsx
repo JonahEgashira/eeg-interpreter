@@ -72,6 +72,8 @@ const App = (): JSX.Element => {
     setSelectedFiles([])
     setConversationFiles([])
     setInput('')
+
+    textareaRef.current?.focus()
   }
 
   const handleLoadConversation = async (id: string) => {
@@ -255,6 +257,7 @@ const App = (): JSX.Element => {
             handleSendMessage={handleSendMessage}
             handleExecutionResult={handleExecutionResult}
             handleFileSelect={handleFileSelect}
+            textAreaRef={textareaRef}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
           />
@@ -271,6 +274,7 @@ const App = (): JSX.Element => {
             handleSendMessage={handleSendMessage}
             handleExecutionResult={handleExecutionResult}
             handleFileSelect={handleFileSelect}
+            textAreaRef={textareaRef}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
           />
@@ -285,6 +289,7 @@ const App = (): JSX.Element => {
         handleSendMessage={handleSendMessage}
         handleExecutionResult={handleExecutionResult}
         handleFileSelect={handleFileSelect}
+        textAreaRef={textareaRef}
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
       />

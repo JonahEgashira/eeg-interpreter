@@ -9,6 +9,7 @@ interface InputAreaProps {
   handleFileSelect: (filePaths: string[]) => void
   isStreaming: boolean
   openaiApiKey: string | null
+  textAreaRef: React.RefObject<HTMLTextAreaElement>
 }
 
 const InputArea: React.FC<InputAreaProps> = ({
@@ -17,13 +18,13 @@ const InputArea: React.FC<InputAreaProps> = ({
   handleSendMessage,
   handleFileSelect,
   isStreaming,
-  openaiApiKey
+  openaiApiKey,
+  textAreaRef
 }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
 
   useEffect(() => {
-    textareaRef.current?.focus()
+    textAreaRef.current?.focus()
   }, [])
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -48,7 +49,7 @@ const InputArea: React.FC<InputAreaProps> = ({
         <input type="file" onChange={handleFileChange} className="hidden" multiple />
       </label>
       <Textarea
-        ref={textareaRef}
+        ref={textAreaRef}
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
