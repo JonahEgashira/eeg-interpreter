@@ -129,23 +129,52 @@ const App = (): JSX.Element => {
     }
   }
 
+  const createMessagesForLLM = (conversation: Conversation): Message[] => {
+    return conversation.messages.map((message) => {
+      if (message.role === 'user') {
+        if (message.filePaths && message.filePaths.length > 0) {
+          return {
+            ...message,
+            content: `${message.content}\n\nFiles attached\n${message.filePaths.join('\n')}`
+          }
+        }
+        return message
+      } else if (
+        message.role === 'assistant' &&
+        message.executionResults &&
+        message.executionResults.length > 0
+      ) {
+        const resultsContent = message.executionResults
+          .map((result, index) => {
+            let resultText = `\n\nExecution Result ${index + 1}:`
+            if (result.output) resultText += `\nOutput:\n${result.output}`
+            if (result.figurePaths && result.figurePaths.length > 0) {
+              resultText += `\nFigures:\n${result.figurePaths.join('\n')}`
+            }
+            if (result.error) resultText += `\nError:\n${result.error}`
+            return resultText
+          })
+          .join('\n')
+
+        return {
+          ...message,
+          content: `${message.content}${resultsContent}`
+        }
+      }
+      return message
+    })
+  }
+
   const streamAIResponse = async (conversation: Conversation): Promise<Message> => {
     if (!openaiApiKey) {
       throw new Error('OpenAI API Key not set')
     }
 
-    const messagesWithFiles = conversation.messages.map((message) => {
-      if (message.filePaths && message.filePaths.length > 0) {
-        return { ...message, content: message.content + message.filePaths.join('\n') }
-      }
-      return message
-    })
-
     const openai = createOpenAI({ apiKey: openaiApiKey })
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       system: prompts.system,
-      messages: messagesWithFiles
+      messages: createMessagesForLLM(conversation)
     })
 
     let fullResponse = ''

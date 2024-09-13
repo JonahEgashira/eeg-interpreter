@@ -107,7 +107,9 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
             <div className="mb-2">
               <strong>Output</strong>
             </div>
-            <div dangerouslySetInnerHTML={{ __html: executionResult.output }} />
+            <SyntaxHighlighter PreTag="div" style={oneLight} language="text">
+              {executionResult.output}
+            </SyntaxHighlighter>
           </div>
         )}
         {language === 'python' && base64Images.length > 0 && (
