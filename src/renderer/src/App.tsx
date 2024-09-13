@@ -80,7 +80,11 @@ const App = (): JSX.Element => {
     try {
       const result = await loadConversation(id)
       if (result.success && result.conversation) {
-        setCurrentConversation(result.conversation)
+        const conversation = result.conversation
+        setCurrentConversation(conversation)
+        if (conversation.filePaths) {
+          setConversationFiles(conversation.filePaths)
+        }
       } else {
         console.error('Failed to load conversation:', result.error)
       }

@@ -5,6 +5,7 @@ import { Conversation, Message, ExecutionResult } from '@shared/types/chat'
 import Markdown from 'react-markdown'
 import CodeBlock from './CodeBlock'
 import { loadBase64Data } from '@renderer/lib/ipcFunctions'
+import { File } from 'lucide-react'
 
 interface MessageAreaProps {
   conversation: Conversation
@@ -72,7 +73,19 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
               }`}
             >
               {message.role === 'user' ? (
-                <p style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
+                <div>
+                  <p style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
+                  {message.filePaths && message.filePaths.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {message.filePaths.map((filePath, fileIndex) => (
+                        <div key={fileIndex} className="flex items-center space-x-2">
+                          <File size={32} />
+                          <span className="text-white">{filePath.split('/').pop()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <Markdown
                   rehypePlugins={[rehypeRaw]}
