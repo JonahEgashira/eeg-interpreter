@@ -168,7 +168,7 @@ const App = (): JSX.Element => {
 
     const openai = createOpenAI({ apiKey: openaiApiKey })
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-4o'),
       system: prompts.system,
       messages: createMessagesForLLM(conversation)
     })
