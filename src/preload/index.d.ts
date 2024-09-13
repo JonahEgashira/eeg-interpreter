@@ -4,7 +4,11 @@ import { CustomError } from '@shared/types/errors'
 import { ExecutionResult } from '@shared/types/chat'
 
 interface CustomAPI {
-  runPythonCode: (figuresDirectoryPath: string, code: string) => Promise<ExecutionResult>
+  runPythonCode: (
+    figuresDirectoryPath: string,
+    code: string,
+    conversationId: string
+  ) => Promise<ExecutionResult>
   saveConversationWithPythonResult: (
     conversation: Conversation,
     messageId: number,

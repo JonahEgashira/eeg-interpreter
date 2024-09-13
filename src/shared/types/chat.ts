@@ -4,7 +4,6 @@ export interface ExecutionResult {
   code: string
   output?: string
   figurePaths?: string[]
-  error?: string
 }
 
 export interface Message {

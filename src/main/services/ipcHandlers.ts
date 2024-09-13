@@ -15,14 +15,17 @@ import { loadBase64Data } from './figureHandler'
 import { Conversation, ExecutionResult, Message } from '@shared/types/chat'
 
 export function setupIpcHandlers(): void {
-  ipcMain.handle('run-python-code', async (_, figuresDirectoryPath: string, code: string) => {
-    try {
-      return await runPythonCode(figuresDirectoryPath, code)
-    } catch (error) {
-      console.error('Error running Python code:', error)
-      return error
+  ipcMain.handle(
+    'run-python-code',
+    async (_, figuresDirectoryPath: string, code: string, conversationId: string) => {
+      try {
+        return await runPythonCode(figuresDirectoryPath, code, conversationId)
+      } catch (error) {
+        console.error('Error running Python code:', error)
+        return error
+      }
     }
-  })
+  )
 
   ipcMain.handle(
     'save-conversation-with-python-result',

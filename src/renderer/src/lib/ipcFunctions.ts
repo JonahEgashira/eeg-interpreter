@@ -3,10 +3,11 @@ import { CustomError } from '@shared/types/errors'
 
 export async function runPythonCode(
   figuresDirectoryPath: string,
-  code: string
+  code: string,
+  conversationId: string
 ): Promise<ExecutionResult> {
   try {
-    const result = await window.api.runPythonCode(figuresDirectoryPath, code)
+    const result = await window.api.runPythonCode(figuresDirectoryPath, code, conversationId)
     return result
   } catch (error) {
     console.error('Error running Python code at ipcFunctions:', error)

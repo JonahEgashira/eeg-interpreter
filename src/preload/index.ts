@@ -5,8 +5,12 @@ import { CustomError } from '@shared/types/errors'
 import { ExecutionResult } from '@shared/types/chat'
 
 const api = {
-  runPythonCode: (figuresDirectoryPath: string, code: string): Promise<ExecutionResult> =>
-    ipcRenderer.invoke('run-python-code', figuresDirectoryPath, code),
+  runPythonCode: (
+    figuresDirectoryPath: string,
+    code: string,
+    conversationId: string
+  ): Promise<ExecutionResult> =>
+    ipcRenderer.invoke('run-python-code', figuresDirectoryPath, code, conversationId),
 
   saveConversationWithPythonResult: (
     conversation: Conversation,

@@ -155,7 +155,6 @@ const App = (): JSX.Element => {
             if (result.figurePaths && result.figurePaths.length > 0) {
               resultText += `\nFigures:\n${result.figurePaths.join('\n')}`
             }
-            if (result.error) resultText += `\nError:\n${result.error}`
             return resultText
           })
           .join('\n')
@@ -177,7 +176,7 @@ const App = (): JSX.Element => {
     const openai = createOpenAI({ apiKey: openaiApiKey })
     const result = await streamText({
       model: openai('gpt-4o-mini'),
-      system: prompts.system,
+      system: prompts.python,
       messages: createMessagesForLLM(conversation)
     })
 
@@ -259,19 +258,25 @@ const App = (): JSX.Element => {
     }
   }, [input, openaiApiKey, currentConversation])
 
-  const handleExecutionResult = useCallback((messageId: number, result: ExecutionResult) => {
-    setCurrentConversation((prevConversation) => {
-      if (!prevConversation) return null
-      const updatedMessages = prevConversation.messages.map((message) =>
-        message.id === messageId
-          ? { ...message, executionResults: [...(message.executionResults || []), result] }
-          : message
-      )
-      const updatedConversation = { ...prevConversation, messages: updatedMessages }
-      saveConversation(updatedConversation)
-      return updatedConversation
-    })
-  }, [])
+  const handleExecutionResult = useCallback(
+    (messageId: number, executionResult: ExecutionResult) => {
+      setCurrentConversation((prevConversation) => {
+        if (!prevConversation) return null
+        const updatedMessages = prevConversation.messages.map((message) =>
+          message.id === messageId
+            ? {
+                ...message,
+                executionResults: [executionResult]
+              }
+            : message
+        )
+        const updatedConversation = { ...prevConversation, messages: updatedMessages }
+        saveConversation(updatedConversation)
+        return updatedConversation
+      })
+    },
+    []
+  )
 
   const handleFileSelect = useCallback((filePaths: string[]) => {
     if (filePaths.length > 0) {

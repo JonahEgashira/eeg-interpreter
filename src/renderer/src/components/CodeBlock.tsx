@@ -59,7 +59,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     const handleRun = async () => {
       try {
         const figureDir = await getConversationImagesDir(conversation.id)
-        const result = await runPythonCode(figureDir, code)
+        const result = await runPythonCode(figureDir, code, conversation.id)
         await saveConversationWithPythonResult(conversation, messageId, result)
 
         if (result.figurePaths) {
@@ -71,8 +71,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         handleExecutionResult(messageId, result)
       } catch (error) {
         const result: ExecutionResult = {
-          code,
-          error: (error as Error).message
+          code
         }
         handleExecutionResult(messageId, result)
       }

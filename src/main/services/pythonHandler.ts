@@ -1,5 +1,5 @@
 import { spawn, ChildProcess } from 'child_process'
-import { KernelManager, ServerConnection } from '@jupyterlab/services'
+import { KernelManager, ServerConnection, Kernel } from '@jupyterlab/services'
 import { app } from 'electron'
 import { handleFigureData } from './figureHandler'
 import { Conversation, ExecutionResult, addExecutionResult } from '@shared/types/chat'
@@ -9,6 +9,7 @@ import { saveConversation } from './jsonFileHandler'
 const JUPYTER_TOKEN = crypto.randomBytes(16).toString('hex')
 const JUPYTER_PORT = 8888
 let jupyterProcess: ChildProcess | null = null
+const conversationKernels: Map<string, Kernel.IKernelConnection> = new Map()
 
 const userDataPath = app.getPath('userData')
 process.chdir(userDataPath)
@@ -73,60 +74,61 @@ export function stopJupyterServer(): Promise<void> {
 
 export async function runPythonCode(
   figuresDirectoryPath: string,
-  code: string
+  code: string,
+  conversationId: string
 ): Promise<ExecutionResult> {
-  console.log('figuresDirectoryPath:', figuresDirectoryPath)
   const settings = ServerConnection.makeSettings({
     baseUrl: `http://localhost:${JUPYTER_PORT}`,
     token: JUPYTER_TOKEN
   })
 
-  try {
-    const kernelManager = new KernelManager({ serverSettings: settings })
-    const kernel = await kernelManager.startNew({ name: 'python3' })
-    const future = kernel.requestExecute({ code })
-
-    return new Promise((resolve, reject) => {
-      let output = ''
-      const figurePaths: string[] = []
-
-      future.onIOPub = async (msg): Promise<void> => {
-        if (msg.header.msg_type === 'execute_result' || msg.header.msg_type === 'stream') {
-          output += (msg.content as { text: string }).text
-        } else if (msg.header.msg_type === 'display_data') {
-          const imageData = (msg.content as { data: { 'image/png': string } }).data['image/png']
-          try {
-            const { figurePath } = await handleFigureData(imageData, figuresDirectoryPath)
-            figurePaths.push(figurePath)
-          } catch (error) {
-            console.error('Error handling figure data:', error)
-          }
-        } else if (msg.header.msg_type === 'error') {
-          const errorContent = msg.content as { evalue: string; traceback: string[] }
-          reject(new Error(`${errorContent.evalue}\n${errorContent.traceback.join('\n')}`))
-        }
-      }
-
-      future.done
-        .then(() => {
-          const result: ExecutionResult = { code }
-          if (output) result.output = output
-          if (figurePaths.length) result.figurePaths = figurePaths
-
-          kernel
-            .shutdown()
-            .then(() => resolve(result))
-            .catch((err) => reject(new Error(`Error shutting down kernel: ${err.message}`)))
-        })
-        .catch((err) => reject(new Error(`Error during code execution: ${err.message}`)))
-    })
-  } catch (error) {
-    console.error('Error in runPythonCode:', error)
-    return {
-      code,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    }
+  const kernelManager = new KernelManager({ serverSettings: settings })
+  let kernel = conversationKernels.get(conversationId)
+  if (!kernel) {
+    kernel = await kernelManager.startNew({ name: 'python3' })
+    conversationKernels.set(conversationId, kernel)
   }
+  const future = kernel.requestExecute({ code })
+
+  return new Promise((resolve, reject) => {
+    let output = ''
+    const figurePaths: string[] = []
+
+    future.onIOPub = async (msg): Promise<void> => {
+      if (msg.header.msg_type === 'execute_result' || msg.header.msg_type === 'stream') {
+        output += (msg.content as { text: string }).text
+      } else if (msg.header.msg_type === 'display_data') {
+        const imageData = (msg.content as { data: { 'image/png': string } }).data['image/png']
+        try {
+          const { figurePath } = await handleFigureData(imageData, figuresDirectoryPath)
+          figurePaths.push(figurePath)
+        } catch (error) {
+          console.error('Error handling figure data:', error)
+        }
+      } else if (msg.header.msg_type === 'error') {
+        console.error('Error during code execution:', msg.content)
+        const errorContent = msg.content as {
+          ename: string
+          evalue: string
+        }
+
+        const errorMessage = `${errorContent.ename}: ${errorContent.evalue}`
+
+        output += errorMessage
+        console.log(output)
+      }
+    }
+
+    future.done
+      .then(() => {
+        const result: ExecutionResult = { code }
+        if (output) result.output = output
+        if (figurePaths.length) result.figurePaths = figurePaths
+
+        resolve(result)
+      })
+      .catch((err) => reject(new Error(`Error during code execution: ${err.message}`)))
+  })
 }
 
 export async function saveConversationWithPythonResult(
