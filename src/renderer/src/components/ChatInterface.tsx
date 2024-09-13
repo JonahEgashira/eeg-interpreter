@@ -10,6 +10,7 @@ interface ChatInterfaceProps {
   handleSendMessage: () => void
   handleExecutionResult: (messageId: number, result: ExecutionResult) => void
   handleFileSelect: (filePaths: string[]) => void
+  selectedFiles: string[]
   textAreaRef: React.RefObject<HTMLTextAreaElement>
   isStreaming: boolean
   openaiApiKey: string | null
@@ -22,6 +23,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   handleSendMessage,
   handleExecutionResult,
   handleFileSelect,
+  selectedFiles,
   textAreaRef,
   isStreaming,
   openaiApiKey
@@ -54,6 +56,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             setInput={setInput}
             handleSendMessage={handleSendMessage}
             handleFileSelect={handleFileSelect}
+            selectedFiles={selectedFiles}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
             textAreaRef={textAreaRef}

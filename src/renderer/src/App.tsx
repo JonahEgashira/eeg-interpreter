@@ -307,6 +307,7 @@ const App = (): JSX.Element => {
             handleSendMessage={handleSendMessage}
             handleExecutionResult={handleExecutionResult}
             handleFileSelect={handleFileSelect}
+            selectedFiles={selectedFiles}
             textAreaRef={textareaRef}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
@@ -324,6 +325,7 @@ const App = (): JSX.Element => {
             handleSendMessage={handleSendMessage}
             handleExecutionResult={handleExecutionResult}
             handleFileSelect={handleFileSelect}
+            selectedFiles={selectedFiles}
             textAreaRef={textareaRef}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
@@ -339,6 +341,7 @@ const App = (): JSX.Element => {
         handleSendMessage={handleSendMessage}
         handleExecutionResult={handleExecutionResult}
         handleFileSelect={handleFileSelect}
+        selectedFiles={selectedFiles}
         textAreaRef={textareaRef}
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
