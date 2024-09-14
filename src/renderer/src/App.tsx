@@ -73,13 +73,13 @@ const App = (): JSX.Element => {
     }
   }, [])
 
-  const handleNewConversation = async () => {
+  const handleNewConversation = useCallback(async () => {
     setCurrentConversation(null)
     setSelectedFiles([])
     setConversationFiles([])
     setInput('')
     textareaRef.current?.focus()
-  }
+  }, [])
 
   const handleLoadConversation = async (id: string) => {
     try {
@@ -251,7 +251,7 @@ const App = (): JSX.Element => {
       setIsStreaming(false)
       textareaRef.current?.focus()
     }
-  }, [input, openaiApiKey, currentConversation])
+  }, [input])
 
   const handleExecutionResult = useCallback(
     async (messageId: number, executionResult: ExecutionResult, isLastMessage: boolean) => {
@@ -288,27 +288,34 @@ const App = (): JSX.Element => {
         await saveConversation(finalConversation)
       }
     },
-    [currentConversation, streamAIResponse]
+    [currentConversation]
   )
 
-  const handleFileSelect = useCallback((filePaths: string[]) => {
-    if (filePaths.length > 0) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...filePaths])
-      setConversationFiles((prevFiles) => [...prevFiles, ...filePaths])
-      setActiveTab(Tab.Files)
-    }
-  }, [])
+  const handleFileSelect = useCallback(
+    (filePaths: string[]) => {
+      if (filePaths.length > 0) {
+        setSelectedFiles((prevFiles) => [...prevFiles, ...filePaths])
+        setConversationFiles((prevFiles) => [...prevFiles, ...filePaths])
+        setActiveTab(Tab.Files)
+      }
+    },
+    [selectedFiles]
+  )
 
-  const handleTabChange = (tab: Tab) => {
-    setActiveTab((prevTab) => (prevTab === tab ? null : tab))
-  }
+  const handleTabChange = useCallback(
+    (tab: Tab) => {
+      setSelectedFiles([])
+      setActiveTab((prevTab) => (prevTab === tab ? null : tab))
+    },
+    [activeTab]
+  )
 
   const handleApiKeyChange = useCallback(
     (newApiKey: string) => {
       setOpenaiApiKey(newApiKey)
       console.log('New API Key saved:', newApiKey)
     },
-    [setOpenaiApiKey]
+    [openaiApiKey]
   )
 
   const handleModelChange = useCallback(
@@ -316,7 +323,7 @@ const App = (): JSX.Element => {
       setOpenaiModel(newModel)
       console.log('New model selected:', newModel)
     },
-    [setOpenaiModel]
+    [openaiModel]
   )
 
   const handleSystemPromptChange = useCallback(
@@ -324,7 +331,7 @@ const App = (): JSX.Element => {
       setSystemPrompt(newPrompt)
       console.log('New system prompt selected:', newPrompt)
     },
-    [setSystemPrompt]
+    [systemPrompt]
   )
 
   const renderContent = () => {
