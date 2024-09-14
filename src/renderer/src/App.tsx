@@ -30,7 +30,7 @@ const App = (): JSX.Element => {
   const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
-  const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.Default)
+  const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.Assistant)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messageAreaRef = useRef<HTMLDivElement>(null)
 
@@ -334,55 +334,7 @@ const App = (): JSX.Element => {
     [systemPrompt]
   )
 
-  const renderContent = () => {
-    if (activeTab === Tab.Settings || !openaiApiKey) {
-      return <Settings onApiKeyChange={handleApiKeyChange} />
-    } else if (activeTab === Tab.Conversations) {
-      return (
-        <>
-          <ConversationsHistory
-            conversations={conversations}
-            currentConversationId={currentConversation?.id}
-            onNewConversation={handleNewConversation}
-            onLoadConversation={handleLoadConversation}
-          />
-          <ChatInterface
-            currentConversation={currentConversation}
-            input={input}
-            setInput={setInput}
-            handleSendMessage={handleSendMessage}
-            handleExecutionResult={handleExecutionResult}
-            handleFileSelect={handleFileSelect}
-            selectedFiles={selectedFiles}
-            textAreaRef={textareaRef}
-            isStreaming={isStreaming}
-            openaiApiKey={openaiApiKey}
-            onModelChange={handleModelChange}
-            onSystemPromptChange={handleSystemPromptChange}
-          />
-        </>
-      )
-    } else if (activeTab === Tab.Files) {
-      return (
-        <>
-          <FileArea filePaths={conversationFiles} />
-          <ChatInterface
-            currentConversation={currentConversation}
-            input={input}
-            setInput={setInput}
-            handleSendMessage={handleSendMessage}
-            handleExecutionResult={handleExecutionResult}
-            handleFileSelect={handleFileSelect}
-            selectedFiles={selectedFiles}
-            textAreaRef={textareaRef}
-            isStreaming={isStreaming}
-            openaiApiKey={openaiApiKey}
-            onModelChange={handleModelChange}
-            onSystemPromptChange={handleSystemPromptChange}
-          />
-        </>
-      )
-    }
+  const renderChatInterface = () => {
     return (
       <ChatInterface
         currentConversation={currentConversation}
@@ -395,10 +347,38 @@ const App = (): JSX.Element => {
         textAreaRef={textareaRef}
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
+        model={openaiModel}
         onModelChange={handleModelChange}
+        systemPrompt={systemPrompt}
         onSystemPromptChange={handleSystemPromptChange}
       />
     )
+  }
+
+  const renderContent = () => {
+    if (activeTab === Tab.Settings || !openaiApiKey) {
+      return <Settings onApiKeyChange={handleApiKeyChange} />
+    } else if (activeTab === Tab.Conversations) {
+      return (
+        <>
+          <ConversationsHistory
+            conversations={conversations}
+            currentConversationId={currentConversation?.id}
+            onNewConversation={handleNewConversation}
+            onLoadConversation={handleLoadConversation}
+          />
+          {renderChatInterface()}
+        </>
+      )
+    } else if (activeTab === Tab.Files) {
+      return (
+        <>
+          <FileArea filePaths={conversationFiles} />
+          {renderChatInterface()}
+        </>
+      )
+    }
+    return renderChatInterface()
   }
 
   return (

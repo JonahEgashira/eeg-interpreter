@@ -1,5 +1,4 @@
 import React from 'react'
-import { useState } from 'react'
 import { Conversation, ExecutionResult } from '@shared/types/chat'
 import MessageArea from './MessageArea'
 import InputArea from './InputArea'
@@ -21,7 +20,9 @@ interface ChatInterfaceProps {
   textAreaRef: React.RefObject<HTMLTextAreaElement>
   isStreaming: boolean
   openaiApiKey: string | null
+  model: OpenAIModel
   onModelChange: (newModel: OpenAIModel) => void
+  systemPrompt: SystemPrompt
   onSystemPromptChange: (newPrompt: SystemPrompt) => void
 }
 
@@ -36,21 +37,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   textAreaRef,
   isStreaming,
   openaiApiKey,
+  model,
   onModelChange,
+  systemPrompt,
   onSystemPromptChange
 }) => {
-  const [selectedModel, setSelectedModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
-  const [selectedPrompt, setSelectedPrompt] = useState<SystemPrompt>(SystemPrompt.Default)
-
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value as OpenAIModel
-    setSelectedModel(newModel)
     onModelChange(newModel)
   }
 
   const handleSystemPromptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newPrompt = e.target.value as SystemPrompt
-    setSelectedPrompt(newPrompt)
     onSystemPromptChange(newPrompt)
   }
 
@@ -58,7 +56,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     <div className="flex flex-col flex-grow">
       <div className="absolute top-4 right-4">
         <select
-          value={selectedModel}
+          value={model}
           onChange={handleModelChange}
           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
         >
@@ -69,7 +67,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           ))}
         </select>
         <select
-          value={selectedPrompt}
+          value={systemPrompt}
           onChange={handleSystemPromptChange}
           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
         >
