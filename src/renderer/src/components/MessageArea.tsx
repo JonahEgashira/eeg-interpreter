@@ -11,7 +11,11 @@ interface MessageAreaProps {
   conversation: Conversation
   messages: Message[]
   isStreaming: boolean
-  handleExecutionResult: (messageId: number, result: ExecutionResult) => void
+  handleExecutionResult: (
+    messageId: number,
+    result: ExecutionResult,
+    isLastMessage: boolean
+  ) => void
 }
 
 const conversationMessageId = (conversationId: string, messageId: number) =>

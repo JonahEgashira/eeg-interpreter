@@ -1,6 +1,6 @@
-import React, { useMemo, memo } from 'react'
+import React, { useMemo, memo, useState, useEffect } from 'react'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
-import { Play, Download } from 'lucide-react'
+import { Download, Play } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Conversation } from '@shared/types/chat'
@@ -15,7 +15,11 @@ interface CodeBlockProps {
   conversation: Conversation
   messageId: number
   code: string
-  handleExecutionResult: (messageId: number, result: ExecutionResult) => void
+  handleExecutionResult: (
+    messageId: number,
+    result: ExecutionResult,
+    isLastMessage: boolean
+  ) => void
   language: string
   inline: boolean
   index: number
@@ -35,7 +39,6 @@ const ImageDisplay = memo(({ index, base64 }: { index: number; base64: string })
     <img src={`data:image/png;base64,${base64}`} alt="figure" className="max-w-full" />
   </div>
 ))
-
 ImageDisplay.displayName = 'ImageDisplay'
 
 const CodeBlock: React.FC<CodeBlockProps> = memo(
@@ -50,6 +53,13 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     base64Images,
     handleBase64Update
   }) => {
+    const [showDialog, setShowDialog] = useState(false)
+    const [waitingForInput, setWaitingForInput] = useState(false)
+
+    const isLastMessage = conversation?.messages?.length
+      ? conversation.messages[conversation.messages.length - 1].id === messageId
+      : false
+
     const executionResult = useMemo(() => {
       return conversation?.messages.find(
         (message) => message.id === messageId && message.executionResult
@@ -68,12 +78,39 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
           ) as string[]
           handleBase64Update(conversation.id, messageId, base64Images)
         }
-        handleExecutionResult(messageId, result)
+        handleExecutionResult(messageId, result, isLastMessage)
       } catch (error) {
         const result: ExecutionResult = { code }
-        handleExecutionResult(messageId, result)
+        handleExecutionResult(messageId, result, isLastMessage)
       }
     }
+
+    useEffect(() => {
+      if (isLastMessage && language === 'python') {
+        setShowDialog(true)
+        setWaitingForInput(true)
+      }
+
+      if (waitingForInput && language === 'python') {
+        const handleKeyPress = (event: KeyboardEvent) => {
+          if (event.key.toLowerCase() === 'y') {
+            handleRun()
+            setShowDialog(false)
+            setWaitingForInput(false)
+          } else if (event.key.toLowerCase() === 'n') {
+            setShowDialog(false)
+            setWaitingForInput(false)
+          }
+        }
+
+        document.addEventListener('keydown', handleKeyPress)
+
+        return () => {
+          document.removeEventListener('keydown', handleKeyPress)
+        }
+      }
+      return () => {}
+    }, [waitingForInput, isLastMessage, language])
 
     if (inline) {
       return (
@@ -88,17 +125,24 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         {language === 'python' && (
           <div className="flex justify-between items-center mb-2 mt-6">
             <span className="text-sm font-bold">Python</span>
-            <button
-              onClick={handleRun}
-              className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
-            >
-              <Play size={18} />
-            </button>
+            {!isLastMessage && (
+              <button
+                onClick={handleRun}
+                className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
+              >
+                <Play size={18} />
+              </button>
+            )}
           </div>
         )}
         <SyntaxHighlighter PreTag="div" style={oneLight} language={language}>
           {code}
         </SyntaxHighlighter>
+        {showDialog && (
+          <div className="p-2 mb-2 bg-gray-100 rounded border border-gray-400">
+            <p className="text-sm font-bold">Do you want to run this code? (y/n)</p>
+          </div>
+        )}
         {language === 'python' && executionResult?.output && (
           <div className="mt-2 p-2 bg-gray-100 rounded">
             <div className="mb-2">

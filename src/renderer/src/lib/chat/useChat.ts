@@ -230,8 +230,8 @@ export const useChat = () => {
 
       setCurrentConversation(updatedConversation)
       setInput('')
-      setIsStreaming(true)
 
+      setIsStreaming(true)
       const aiMessage = await streamAIResponse(updatedConversation)
       setIsStreaming(false)
 
@@ -248,23 +248,38 @@ export const useChat = () => {
   }, [input, openaiApiKey, currentConversation])
 
   const handleExecutionResult = useCallback(
-    (messageId: number, executionResult: ExecutionResult) => {
-      setCurrentConversation((prevConversation) => {
-        if (!prevConversation) return null
-        const updatedMessages = prevConversation.messages.map((message) =>
-          message.id === messageId
-            ? {
-                ...message,
-                executionResult: executionResult
-              }
-            : message
-        )
-        const updatedConversation = { ...prevConversation, messages: updatedMessages }
-        saveConversation(updatedConversation)
-        return updatedConversation
-      })
+    async (messageId: number, executionResult: ExecutionResult, isLastMessage: boolean) => {
+      if (!currentConversation) return
+
+      const updatedMessages = currentConversation.messages.map((message) =>
+        message.id === messageId ? { ...message, executionResult } : message
+      )
+
+      if (isLastMessage) {
+        const output =
+          `Execution Result:\n\n${executionResult.output}` ||
+          'No output returned from python script'
+        updatedMessages.push({
+          id: updatedMessages.length + 1,
+          role: 'user',
+          content: output
+        })
+      }
+
+      const updatedConversation = { ...currentConversation, messages: updatedMessages }
+      setCurrentConversation(updatedConversation)
+
+      if (isLastMessage) {
+        setIsStreaming(true)
+        const aiMessage = await streamAIResponse(updatedConversation)
+        setIsStreaming(false)
+
+        const finalConversation = updateConversation(updatedConversation, aiMessage)
+        setCurrentConversation(finalConversation)
+        await saveConversation(finalConversation)
+      }
     },
-    []
+    [currentConversation, streamAIResponse]
   )
 
   const handleFileSelect = useCallback((filePaths: string[]) => {

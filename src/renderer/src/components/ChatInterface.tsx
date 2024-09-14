@@ -11,7 +11,11 @@ interface ChatInterfaceProps {
   input: string
   setInput: React.Dispatch<React.SetStateAction<string>>
   handleSendMessage: () => void
-  handleExecutionResult: (messageId: number, result: ExecutionResult) => void
+  handleExecutionResult: (
+    messageId: number,
+    result: ExecutionResult,
+    isLastMessage: boolean
+  ) => void
   handleFileSelect: (filePaths: string[]) => void
   selectedFiles: string[]
   textAreaRef: React.RefObject<HTMLTextAreaElement>
