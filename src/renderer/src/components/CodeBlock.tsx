@@ -53,9 +53,11 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     base64Images,
     handleBase64Update
   }) => {
-    const isLastMessage = conversation?.messages?.length
-      ? conversation.messages[conversation.messages.length - 1].id === messageId
-      : false
+    const isLastMessage = useMemo(() => {
+      return conversation?.messages?.length
+        ? conversation.messages[conversation.messages.length - 1].id === messageId
+        : false
+    }, [conversation, messageId])
 
     const executionResult = useMemo(() => {
       return conversation?.messages.find(
@@ -83,6 +85,8 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     }
 
     useEffect(() => {
+      if (language !== 'python') return
+
       const handleKeyPress = (event: KeyboardEvent) => {
         if (isLastMessage && event.ctrlKey && event.key.toLowerCase() === 'r') {
           handleRun()

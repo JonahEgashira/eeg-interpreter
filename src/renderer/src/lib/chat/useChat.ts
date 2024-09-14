@@ -258,7 +258,7 @@ export const useChat = () => {
       let output = `Execution Result:\n\n${executionResult.output || 'No output returned from python script'}`
 
       if (executionResult.figurePaths && executionResult.figurePaths.length > 0) {
-        output += `\n\n${executionResult.figurePaths.length} figure(s) generated.`
+        output += `\n\n${executionResult.figurePaths.length} figure(s) generated and showed successfully.`
       }
 
       if (isLastMessage) {
