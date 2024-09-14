@@ -22,16 +22,17 @@ interface CodeBlockProps {
   ) => void
   language: string
   inline: boolean
-  index: number
+  messageIndex: number
   base64Images: string[]
   handleBase64Update: (conversationId: string, messageId: number, base64: string[]) => void
+  isLastMessage: boolean
 }
 
-const ImageDisplay = memo(({ index, base64 }: { index: number; base64: string }) => (
+const ImageDisplay = memo(({ messageIndex, base64 }: { messageIndex: number; base64: string }) => (
   <div className="flex flex-col items-start mb-2">
     <a
       href={`data:image/png;base64,${base64}`}
-      download={`${Date.now()}-${index}.png`}
+      download={`${Date.now()}-${messageIndex}.png`}
       className="my-2 self-end p-1 text-black underline flex items-center"
     >
       <Download size={20} />
@@ -49,16 +50,11 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     handleExecutionResult,
     language,
     inline,
-    index,
+    messageIndex,
     base64Images,
-    handleBase64Update
+    handleBase64Update,
+    isLastMessage
   }) => {
-    const isLastMessage = useMemo(() => {
-      return conversation?.messages?.length
-        ? conversation.messages[conversation.messages.length - 1].id === messageId
-        : false
-    }, [conversation, messageId])
-
     const executionResult = useMemo(() => {
       return conversation?.messages.find(
         (message) => message.id === messageId && message.executionResult
@@ -98,11 +94,11 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
       return () => {
         document.removeEventListener('keydown', handleKeyPress)
       }
-    }, [conversation, messageId, code])
+    }, [language, isLastMessage, handleRun])
 
     if (inline) {
       return (
-        <code key={index} className="bg-gray-300 rounded px-1 py-0.5 text-sm">
+        <code key={messageIndex} className="bg-gray-300 rounded px-1 py-0.5 text-sm">
           {code}
         </code>
       )
@@ -148,7 +144,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
             </div>
             <div className="grid grid-cols-1 gap-2">
               {base64Images.map((base64, i) => (
-                <ImageDisplay key={i} index={i} base64={base64} />
+                <ImageDisplay key={i} messageIndex={i} base64={base64} />
               ))}
             </div>
           </div>

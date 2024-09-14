@@ -66,8 +66,8 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
 
     return (
       <div ref={messageAreaRef} className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]">
-        {messages.map((message, index) => (
-          <div key={index} className="flex justify-center">
+        {messages.map((message, messageIndex) => (
+          <div key={messageIndex} className="flex justify-center">
             <div
               className={`p-3 rounded-lg w-4/5 ${
                 message.role === 'user'
@@ -94,11 +94,12 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
                   rehypePlugins={[rehypeRaw]}
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    code({ className, children, ...rest }) {
+                    code({ className, children }) {
                       const match = /language-(\w+)/.exec(className || '')
                       const codeContent = String(children).replace(/\n$/, '')
                       const language = match ? match[1] : ''
                       const inline = !className
+                      const isLastMessage = messageIndex === messages.length - 1
 
                       return (
                         <CodeBlock
@@ -108,12 +109,12 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
                           handleExecutionResult={handleExecutionResult}
                           language={language}
                           inline={inline}
-                          index={index}
+                          messageIndex={messageIndex}
                           base64Images={
                             base64Images[conversationMessageId(conversation.id, message.id)] || []
                           }
                           handleBase64Update={handleBase64Update}
-                          {...rest}
+                          isLastMessage={isLastMessage}
                         />
                       )
                     }
@@ -122,9 +123,11 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
                   {message.content}
                 </Markdown>
               )}
-              {message.role === 'assistant' && isStreaming && index === messages.length - 1 && (
-                <span className="text-gray-500 animate-pulse">...</span>
-              )}
+              {message.role === 'assistant' &&
+                isStreaming &&
+                messageIndex === messages.length - 1 && (
+                  <span className="text-gray-500 animate-pulse">...</span>
+                )}
             </div>
           </div>
         ))}
