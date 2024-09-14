@@ -373,7 +373,7 @@ const App = (): JSX.Element => {
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
         onModelChange={handleModelChange}
-        onSystemPromptChange={handleSystempromptChange}
+        onSystemPromptChange={handleSystemPromptChange}
       />
     )
   }
