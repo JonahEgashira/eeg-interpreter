@@ -15,6 +15,7 @@ import { getSettingsFromFile } from './lib/ipcFunctions'
 import { Tab } from './components/SidebarNavitation'
 import FileArea from './components/FileArea'
 import { OpenAIModel } from '@shared/types/chat'
+import { SystemPrompt } from './lib/config/prompts'
 
 const App = (): JSX.Element => {
   const [input, setInput] = useState<string>('')
@@ -26,6 +27,7 @@ const App = (): JSX.Element => {
   const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
+  const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.Default)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messageAreaRef = useRef<HTMLDivElement>(null)
@@ -171,7 +173,7 @@ const App = (): JSX.Element => {
     const openai = createOpenAI({ apiKey: openaiApiKey })
     const result = await streamText({
       model: openai(openaiModel),
-      system: prompts.system,
+      system: prompts.system[systemPrompt],
       messages: createMessagesForLLM(conversation)
     })
 
@@ -285,15 +287,29 @@ const App = (): JSX.Element => {
     setActiveTab((prevTab) => (prevTab === tab ? null : tab))
   }
 
-  const handleApiKeyChange = (newApiKey: string) => {
-    setOpenaiApiKey(newApiKey)
-    console.log('New API Key saved:', newApiKey)
-  }
+  const handleApiKeyChange = useCallback(
+    (newApiKey: string) => {
+      setOpenaiApiKey(newApiKey)
+      console.log('New API Key saved:', newApiKey)
+    },
+    [setOpenaiApiKey]
+  )
 
-  const handleModelChange = (newModel: OpenAIModel) => {
-    setOpenaiModel(newModel)
-    console.log('New model selected:', newModel)
-  }
+  const handleModelChange = useCallback(
+    (newModel: OpenAIModel) => {
+      setOpenaiModel(newModel)
+      console.log('New model selected:', newModel)
+    },
+    [setOpenaiModel]
+  )
+
+  const handleSystemPromptChange = useCallback(
+    (newPrompt: SystemPrompt) => {
+      setSystemPrompt(newPrompt)
+      console.log('New system prompt selected:', newPrompt)
+    },
+    [setSystemPrompt]
+  )
 
   const renderContent = () => {
     if (activeTab === Tab.Settings || !openaiApiKey) {
@@ -319,6 +335,7 @@ const App = (): JSX.Element => {
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
             onModelChange={handleModelChange}
+            onSystemPromptChange={handleSystemPromptChange}
           />
         </>
       )
@@ -338,6 +355,7 @@ const App = (): JSX.Element => {
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
             onModelChange={handleModelChange}
+            onSystemPromptChange={handleSystemPromptChange}
           />
         </>
       )
@@ -355,6 +373,7 @@ const App = (): JSX.Element => {
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
         onModelChange={handleModelChange}
+        onSystemPromptChange={handleSystempromptChange}
       />
     )
   }

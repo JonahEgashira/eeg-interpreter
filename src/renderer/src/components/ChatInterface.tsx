@@ -1,9 +1,10 @@
 import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Conversation, ExecutionResult } from '@shared/types/chat'
 import MessageArea from './MessageArea'
 import InputArea from './InputArea'
 import { OpenAIModel } from '@shared/types/chat'
+import { SystemPrompt } from '@renderer/lib/config/prompts'
 
 interface ChatInterfaceProps {
   currentConversation: Conversation | null
@@ -17,6 +18,7 @@ interface ChatInterfaceProps {
   isStreaming: boolean
   openaiApiKey: string | null
   onModelChange: (newModel: OpenAIModel) => void
+  onSystemPromptChange: (newPrompt: SystemPrompt) => void
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -30,14 +32,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   textAreaRef,
   isStreaming,
   openaiApiKey,
-  onModelChange
+  onModelChange,
+  onSystemPromptChange
 }) => {
   const [selectedModel, setSelectedModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
+  const [selectedPrompt, setSelectedPrompt] = useState<SystemPrompt>(SystemPrompt.Default)
 
-  const handleModelChangeLocal = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value as OpenAIModel
     setSelectedModel(newModel)
     onModelChange(newModel)
+  }
+
+  const handleSystemPromptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPrompt = e.target.value as SystemPrompt
+    setSelectedPrompt(newPrompt)
+    onSystemPromptChange(newPrompt)
   }
 
   return (
@@ -45,12 +55,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="absolute top-4 right-4">
         <select
           value={selectedModel}
-          onChange={handleModelChangeLocal}
+          onChange={handleModelChange}
           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
         >
           {Object.values(OpenAIModel).map((model) => (
             <option key={model} value={model}>
               {model}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedPrompt}
+          onChange={handleSystemPromptChange}
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          {Object.values(SystemPrompt).map((prompt) => (
+            <option key={prompt} value={prompt}>
+              {prompt}
             </option>
           ))}
         </select>
