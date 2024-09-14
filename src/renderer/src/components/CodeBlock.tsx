@@ -1,4 +1,4 @@
-import React, { useMemo, memo, useState, useEffect } from 'react'
+import React, { useMemo, memo, useEffect } from 'react'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
 import { Download, Play } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -53,9 +53,6 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     base64Images,
     handleBase64Update
   }) => {
-    const [showDialog, setShowDialog] = useState(false)
-    const [waitingForInput, setWaitingForInput] = useState(false)
-
     const isLastMessage = conversation?.messages?.length
       ? conversation.messages[conversation.messages.length - 1].id === messageId
       : false
@@ -86,31 +83,18 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     }
 
     useEffect(() => {
-      if (isLastMessage && language === 'python') {
-        setShowDialog(true)
-        setWaitingForInput(true)
-      }
-
-      if (waitingForInput && language === 'python') {
-        const handleKeyPress = (event: KeyboardEvent) => {
-          if (event.key.toLowerCase() === 'y') {
-            handleRun()
-            setShowDialog(false)
-            setWaitingForInput(false)
-          } else if (event.key.toLowerCase() === 'n') {
-            setShowDialog(false)
-            setWaitingForInput(false)
-          }
-        }
-
-        document.addEventListener('keydown', handleKeyPress)
-
-        return () => {
-          document.removeEventListener('keydown', handleKeyPress)
+      const handleKeyPress = (event: KeyboardEvent) => {
+        if (isLastMessage && event.ctrlKey && event.key.toLowerCase() === 'r') {
+          handleRun()
         }
       }
-      return () => {}
-    }, [waitingForInput, isLastMessage, language])
+
+      document.addEventListener('keydown', handleKeyPress)
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyPress)
+      }
+    }, [conversation, messageId, code])
 
     if (inline) {
       return (
@@ -125,24 +109,24 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         {language === 'python' && (
           <div className="flex justify-between items-center mb-2 mt-6">
             <span className="text-sm font-bold">Python</span>
-            {!isLastMessage && (
+            <div className="flex items-center">
               <button
                 onClick={handleRun}
-                className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
+                className="px-2 py-1 hover:bg-gray-400 bg-gray-500 text-white text-xs rounded"
               >
-                <Play size={18} />
+                <Play size={16} />
               </button>
-            )}
+              {isLastMessage && (
+                <p className="text-xs text-gray-500 ml-2">
+                  Or press <span className="font-bold">CTRL + R</span>.
+                </p>
+              )}
+            </div>
           </div>
         )}
         <SyntaxHighlighter PreTag="div" style={oneLight} language={language}>
           {code}
         </SyntaxHighlighter>
-        {showDialog && (
-          <div className="p-2 mb-2 bg-gray-100 rounded border border-gray-400">
-            <p className="text-sm font-bold">Do you want to run this code? (y/n)</p>
-          </div>
-        )}
         {language === 'python' && executionResult?.output && (
           <div className="mt-2 p-2 bg-gray-100 rounded">
             <div className="mb-2">

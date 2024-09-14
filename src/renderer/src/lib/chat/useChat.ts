@@ -255,10 +255,13 @@ export const useChat = () => {
         message.id === messageId ? { ...message, executionResult } : message
       )
 
+      let output = `Execution Result:\n\n${executionResult.output || 'No output returned from python script'}`
+
+      if (executionResult.figurePaths && executionResult.figurePaths.length > 0) {
+        output += `\n\n${executionResult.figurePaths.length} figure(s) generated.`
+      }
+
       if (isLastMessage) {
-        const output =
-          `Execution Result:\n\n${executionResult.output}` ||
-          'No output returned from python script'
         updatedMessages.push({
           id: updatedMessages.length + 1,
           role: 'user',
