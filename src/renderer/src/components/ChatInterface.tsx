@@ -1,7 +1,9 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
 import { Conversation, ExecutionResult } from '@shared/types/chat'
 import MessageArea from './MessageArea'
 import InputArea from './InputArea'
+import { OpenAIModel } from '@shared/types/chat'
 
 interface ChatInterfaceProps {
   currentConversation: Conversation | null
@@ -14,6 +16,7 @@ interface ChatInterfaceProps {
   textAreaRef: React.RefObject<HTMLTextAreaElement>
   isStreaming: boolean
   openaiApiKey: string | null
+  onModelChange: (newModel: OpenAIModel) => void
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -26,10 +29,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   selectedFiles,
   textAreaRef,
   isStreaming,
-  openaiApiKey
+  openaiApiKey,
+  onModelChange
 }) => {
+  const [selectedModel, setSelectedModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
+
+  const handleModelChangeLocal = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newModel = e.target.value as OpenAIModel
+    setSelectedModel(newModel)
+    onModelChange(newModel)
+  }
+
   return (
     <div className="flex flex-col flex-grow">
+      <div className="absolute top-4 right-4">
+        <select
+          value={selectedModel}
+          onChange={handleModelChangeLocal}
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          {Object.values(OpenAIModel).map((model) => (
+            <option key={model} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
         <div className="max-w-4xl w-full h-full flex flex-col">
           {currentConversation ? (

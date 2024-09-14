@@ -57,7 +57,7 @@ const Settings: React.FC<SettingsProps> = ({ onApiKeyChange }) => {
             <div className="text-center text-gray-500 max-w-md w-full">
               <h2 className="text-2xl font-bold mb-4">OpenAI API Key Settings</h2>
               {maskedApiKey ? (
-                <p className="mb-6">Your current API key:</p>
+                <p className="mb-6">Your current API key</p>
               ) : (
                 <p className="mb-6">Please enter your OpenAI API Key to start using the app.</p>
               )}

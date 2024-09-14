@@ -14,6 +14,7 @@ import { prompts, replacePlaceholders } from './lib/config/prompts'
 import { getSettingsFromFile } from './lib/ipcFunctions'
 import { Tab } from './components/SidebarNavitation'
 import FileArea from './components/FileArea'
+import { OpenAIModel } from '@shared/types/chat'
 
 const App = (): JSX.Element => {
   const [input, setInput] = useState<string>('')
@@ -22,6 +23,7 @@ const App = (): JSX.Element => {
   const [conversationFiles, setConversationFiles] = useState<string[]>([])
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [openaiApiKey, setOpenaiApiKey] = useState<string | null>(null)
+  const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
 
@@ -168,7 +170,7 @@ const App = (): JSX.Element => {
 
     const openai = createOpenAI({ apiKey: openaiApiKey })
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
+      model: openai(openaiModel),
       system: prompts.system,
       messages: createMessagesForLLM(conversation)
     })
@@ -288,6 +290,11 @@ const App = (): JSX.Element => {
     console.log('New API Key saved:', newApiKey)
   }
 
+  const handleModelChange = (newModel: OpenAIModel) => {
+    setOpenaiModel(newModel)
+    console.log('New model selected:', newModel)
+  }
+
   const renderContent = () => {
     if (activeTab === Tab.Settings || !openaiApiKey) {
       return <Settings onApiKeyChange={handleApiKeyChange} />
@@ -311,6 +318,7 @@ const App = (): JSX.Element => {
             textAreaRef={textareaRef}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
+            onModelChange={handleModelChange}
           />
         </>
       )
@@ -329,6 +337,7 @@ const App = (): JSX.Element => {
             textAreaRef={textareaRef}
             isStreaming={isStreaming}
             openaiApiKey={openaiApiKey}
+            onModelChange={handleModelChange}
           />
         </>
       )
@@ -345,6 +354,7 @@ const App = (): JSX.Element => {
         textAreaRef={textareaRef}
         isStreaming={isStreaming}
         openaiApiKey={openaiApiKey}
+        onModelChange={handleModelChange}
       />
     )
   }

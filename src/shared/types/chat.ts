@@ -23,6 +23,11 @@ export interface Conversation {
   updatedAt: Date
 }
 
+export enum OpenAIModel {
+  GPT_4o = 'gpt-4o',
+  GPT_4o_mini = 'gpt-4o-mini'
+}
+
 export type ConversationJSON = Omit<Conversation, 'createdAt' | 'updatedAt'> & {
   createdAt: string
   updatedAt: string
