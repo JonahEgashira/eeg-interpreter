@@ -1,6 +1,6 @@
 import React, { useMemo, memo, useEffect } from 'react'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
-import { Download, Play } from 'lucide-react'
+import { Play } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Conversation } from '@shared/types/chat'
@@ -10,6 +10,7 @@ import {
   getConversationImagesDir,
   loadBase64Data
 } from '@renderer/lib/ipcFunctions'
+import ImageDisplay from './ImageDisplay'
 
 interface CodeBlockProps {
   conversation: Conversation
@@ -27,20 +28,6 @@ interface CodeBlockProps {
   handleBase64Update: (conversationId: string, messageId: number, base64: string[]) => void
   isLastMessage: boolean
 }
-
-const ImageDisplay = memo(({ messageIndex, base64 }: { messageIndex: number; base64: string }) => (
-  <div className="flex flex-col items-start mb-2">
-    <a
-      href={`data:image/png;base64,${base64}`}
-      download={`${Date.now()}-${messageIndex}.png`}
-      className="my-2 self-end p-1 text-black underline flex items-center"
-    >
-      <Download size={20} />
-    </a>
-    <img src={`data:image/png;base64,${base64}`} alt="figure" className="max-w-full" />
-  </div>
-))
-ImageDisplay.displayName = 'ImageDisplay'
 
 const CodeBlock: React.FC<CodeBlockProps> = memo(
   ({
