@@ -117,7 +117,7 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         {language === 'python' && executionResult?.output && (
           <div className="mt-2 p-2 bg-gray-100 rounded">
             <div className="mb-2">
-              <strong>Output</strong>
+              <strong>Execution Result</strong>
             </div>
             <SyntaxHighlighter PreTag="div" style={oneLight} language="text">
               {executionResult.output}

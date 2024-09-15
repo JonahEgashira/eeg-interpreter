@@ -151,7 +151,7 @@ const App = (): JSX.Element => {
       } else if (message.role === 'assistant' && message.executionResult) {
         const result = message.executionResult
         let resultText = '\n\nExecution Result:'
-        if (result.output) resultText += `\nOutput:\n${result.output}`
+        if (result.output) resultText += `\nStandard output:\n${result.output}`
         if (result.figurePaths && result.figurePaths.length > 0) {
           resultText += `\nFigures:\n${result.figurePaths.join('\n')}`
         }
@@ -261,17 +261,18 @@ const App = (): JSX.Element => {
         message.id === messageId ? { ...message, executionResult } : message
       )
 
-      let output = `Execution Result:\n\n${executionResult.output || 'No output returned from python script'}`
+      let output = `Execution Result\n\n${executionResult.output || 'Script executed successfully with no standard output.'}`
 
       if (executionResult.figurePaths && executionResult.figurePaths.length > 0) {
-        output += `\n\n${executionResult.figurePaths.length} figure(s) generated and showed successfully.`
+        output += `\n${executionResult.figurePaths.length} figure(s) generated and showed successfully.`
       }
 
       if (isLastMessage) {
         updatedMessages.push({
           id: updatedMessages.length + 1,
           role: 'user',
-          content: output
+          content: output,
+          isExecutionMessage: true
         })
       }
 

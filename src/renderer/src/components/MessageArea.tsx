@@ -1,11 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback, memo } from 'react'
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
 import { Conversation, Message, ExecutionResult } from '@shared/types/chat'
-import Markdown from 'react-markdown'
-import CodeBlock from './CodeBlock'
 import { loadBase64Data } from '@renderer/lib/ipcFunctions'
-import { File } from 'lucide-react'
+import MessageCard, { MessageTypeEnum } from './MessageCard'
 
 interface MessageAreaProps {
   conversation: Conversation
@@ -66,71 +62,26 @@ const MessageArea: React.FC<MessageAreaProps> = memo(
 
     return (
       <div ref={messageAreaRef} className="w-full flex-grow overflow-auto space-y-4 min-h-[50vh]">
-        {messages.map((message, messageIndex) => (
-          <div key={messageIndex} className="flex justify-center">
-            <div
-              className={`p-3 rounded-lg w-4/5 ${
-                message.role === 'user'
-                  ? 'bg-black text-white'
-                  : 'bg-white text-black border border-gray-200'
-              }`}
-            >
-              {message.role === 'user' ? (
-                <div>
-                  <p style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
-                  {message.filePaths && message.filePaths.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {message.filePaths.map((filePath, fileIndex) => (
-                        <div key={fileIndex} className="flex items-center space-x-2">
-                          <File size={32} />
-                          <span className="text-white">{filePath.split('/').pop()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Markdown
-                  rehypePlugins={[rehypeRaw]}
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    code({ className, children }) {
-                      const match = /language-(\w+)/.exec(className || '')
-                      const codeContent = String(children).replace(/\n$/, '')
-                      const language = match ? match[1] : ''
-                      const inline = !className
-                      const isLastMessage = messageIndex === messages.length - 1
-
-                      return (
-                        <CodeBlock
-                          conversation={conversation}
-                          messageId={message.id}
-                          code={codeContent}
-                          handleExecutionResult={handleExecutionResult}
-                          language={language}
-                          inline={inline}
-                          messageIndex={messageIndex}
-                          base64Images={
-                            base64Images[conversationMessageId(conversation.id, message.id)] || []
-                          }
-                          handleBase64Update={handleBase64Update}
-                          isLastMessage={isLastMessage}
-                        />
-                      )
-                    }
-                  }}
-                >
-                  {message.content}
-                </Markdown>
-              )}
-              {message.role === 'assistant' &&
-                isStreaming &&
-                messageIndex === messages.length - 1 && (
-                  <span className="text-gray-500 animate-pulse">...</span>
-                )}
-            </div>
-          </div>
-        ))}
+        {messages.map((message, messageIndex) => {
+          let messageType =
+            message.role === 'user' ? MessageTypeEnum.User : MessageTypeEnum.Assistant
+          if (message.isExecutionMessage) {
+            messageType = MessageTypeEnum.ExecutionResult
+          }
+          return (
+            <MessageCard
+              key={message.id}
+              message={message}
+              messageType={messageType}
+              conversation={conversation}
+              messageIndex={messageIndex}
+              isStreaming={isStreaming}
+              base64Images={base64Images[conversationMessageId(conversation.id, message.id)] || []}
+              handleExecutionResult={handleExecutionResult}
+              handleBase64Update={handleBase64Update}
+            />
+          )
+        })}
       </div>
     )
   }
