@@ -94,7 +94,7 @@ const MessageCard: React.FC<MessageProps> = ({
       case MessageTypeEnum.ExecutionResult:
         return (
           <div>
-            <pre className="whitespace-pre-wrap text-green-400 font-mono text-sm">
+            <pre className="whitespace-pre-wrap text-green-400 font-mono text-sm font-bold">
               {message.content}
             </pre>
             {base64Images.length > 0 && (
