@@ -99,21 +99,12 @@ const App = (): JSX.Element => {
   }
 
   const createOrUpdateConversation = async (userMessage: Message): Promise<Conversation> => {
-    if (!openaiApiKey) {
+    if (openaiApiKey === null) {
       throw new Error('OpenAI API Key not set')
     }
 
-    if (!currentConversation) {
-      const titleGenerationPrompt = replacePlaceholders(prompts.titleGeneration, {
-        input: userMessage.content
-      })
-      const generatedTitle = await generateText({
-        model: createOpenAI({ apiKey: openaiApiKey })('gpt-4o-mini'),
-        prompt: titleGenerationPrompt
-      })
-
-      const formattedTitle = generatedTitle.text.replace(/^["']|["']$/g, '').trim()
-      const result = await createNewConversation(formattedTitle)
+    if (currentConversation === null) {
+      const result = await createNewConversation('New Conversation')
 
       if (!result.success || !result.conversation) {
         throw new Error('Failed to create new conversation')
@@ -166,7 +157,7 @@ const App = (): JSX.Element => {
   }
 
   const streamAIResponse = async (conversation: Conversation): Promise<Message> => {
-    if (!openaiApiKey) {
+    if (openaiApiKey === null) {
       throw new Error('OpenAI API Key not set')
     }
     const openai = createOpenAI({ apiKey: openaiApiKey })
@@ -234,24 +225,55 @@ const App = (): JSX.Element => {
         content: userInput
       })
 
+      const titlePromise = currentConversation === null ? generateTitle(userInput) : null
       setCurrentConversation(updatedConversation)
+
       setInput('')
 
       setIsStreaming(true)
+
       const aiMessage = await streamAIResponse(updatedConversation)
+
       setIsStreaming(false)
 
-      updatedConversation = updateConversation(updatedConversation, aiMessage)
-      await saveConversation(updatedConversation)
+      if (titlePromise) {
+        titlePromise.then((title) => {
+          updatedConversation.title = title
+        })
+      }
 
+      updatedConversation = updateConversation(updatedConversation, aiMessage)
+
+      setCurrentConversation(updatedConversation)
       updateConversationsState(updatedConversation)
+
+      await saveConversation(updatedConversation)
       textareaRef.current?.focus()
     } catch (error) {
       console.error('Error processing input:', error)
       setIsStreaming(false)
       textareaRef.current?.focus()
     }
-  }, [input])
+  }, [input, currentConversation, openaiApiKey, selectedFiles])
+
+  const generateTitle = async (userInput: string) => {
+    if (!openaiApiKey) {
+      throw new Error('OpenAI API Key not set')
+    }
+
+    const titleGenerationPrompt = replacePlaceholders(prompts.titleGeneration, {
+      input: userInput
+    })
+
+    const result = await generateText({
+      model: createOpenAI({ apiKey: openaiApiKey })('gpt-4o-mini'),
+      prompt: titleGenerationPrompt
+    })
+
+    const title = result.text.replace(/^["']|["']$/g, '').trim()
+
+    return title
+  }
 
   const handleExecutionResult = useCallback(
     async (messageId: number, executionResult: ExecutionResult, isLastMessage: boolean) => {
