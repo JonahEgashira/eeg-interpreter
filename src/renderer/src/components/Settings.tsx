@@ -19,9 +19,13 @@ const Settings: React.FC<SettingsProps> = ({ onApiKeyChange }) => {
           setNewApiKey(fullApiKey)
           const maskedKey = `********${fullApiKey.slice(-4)}`
           setMaskedApiKey(maskedKey)
+          setIsEditing(false)
+        } else {
+          setIsEditing(true)
         }
       } catch (error) {
         console.error('Error loading settings:', error)
+        setIsEditing(true)
       }
     }
     loadSettings()
@@ -68,7 +72,7 @@ const Settings: React.FC<SettingsProps> = ({ onApiKeyChange }) => {
                   onChange={handleChangeApiKey}
                   className="block w-full px-3 py-2 mb-4 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your OpenAI API Key"
-                  readOnly={!isEditing}
+                  readOnly={!isEditing && !!maskedApiKey}
                 />
                 {maskedApiKey && !isEditing && (
                   <button
