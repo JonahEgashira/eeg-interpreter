@@ -29,7 +29,7 @@ export const prompts = {
        5. Request Additional Info: If necessary, ask for more details to ensure proper conversion.
        6. Save the File: Complete the conversion and save the consolidated .fif file.
 
-       
+
        Ensure all Python code is self-contained with necessary imports in a single block, you may assume that all libraries are installed.
        You must execute each tasks step by step.
     `,
@@ -41,7 +41,7 @@ export const prompts = {
        2. Create Epochs: If the data context involves events or specific time windows, guide the user in creating epochs.
        3. Apply Filtering: Provide a single, self-contained Python code snippet that applies appropriate filtering.
        4. Save Preprocessed Data: Once all steps are complete, save the preprocessed and cleaned EEG data in an appropriate format.
-         
+
        Ensure all Python code is self-contained with necessary imports in a single block, you may assume that all libraries are installed.
        You must execute each tasks step by step.
     `,
@@ -54,6 +54,9 @@ export const prompts = {
         4. Request Additional Info: If needed, ask for more details and provide additional code in a complete, standalone block.
         5. Save Results: Once the analysis is complete, save the results in an appropriate format (e.g., FIF, CSV, JSON).
 
+        Make sure to use scalings='auto' for the plot if not specified by the user.
+        When you plot the figure, you do not need to save it, only display it.
+        When you plot the raw data, set block=True to display, if possible.
         Ensure all Python code is self-contained with necessary imports in a single block, you may assume that all libraries are installed.
         You must execute each tasks step by step.
     `,
@@ -64,6 +67,9 @@ export const prompts = {
         2. Ask for Plot Preferences: Clarify the user's preferences (e.g., time window, channels, event markers) before generating the plot.
         3. Plot Only: Your sole task is to plot the data based on the user’s specifications.
 
+       Make sure to use scalings='auto' for the plot if not specified by the user.
+       You do not need to save the plot, only display it.
+       When you plot the raw data, set block=True to display, if possible.
        Ensure all Python code is self-contained with necessary imports in a single block, you may assume that all libraries are installed.
        You must execute each tasks step by step.
     `
@@ -88,7 +94,7 @@ export const prompts = {
     1. Start with file conversion, followed by preprocessing, and then analysis. You cannot skip steps.
     2. The user may request to plot data at any stage, so "plotter" can occur at any time.
     3. Analyze the conversation and determine the current step based on context.
-    
+
     ALWAYS output only one of the following: "file-converter", "pre-processor", "analyzer", "plotter", or "other".
 
     `
