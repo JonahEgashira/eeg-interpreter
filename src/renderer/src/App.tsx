@@ -27,7 +27,7 @@ const App = (): JSX.Element => {
   const [conversationFiles, setConversationFiles] = useState<string[]>([])
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [openaiApiKey, setOpenaiApiKey] = useState<string | null>(null)
-  const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
+  const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
   const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.FileConverter)
