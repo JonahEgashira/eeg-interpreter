@@ -139,18 +139,6 @@ const App = (): JSX.Element => {
           }
         }
         return message
-      } else if (message.role === 'assistant' && message.executionResult) {
-        const result = message.executionResult
-        let resultText = '\n\nExecution Result:'
-        if (result.output) resultText += `\nStandard output:\n${result.output}`
-        if (result.figurePaths && result.figurePaths.length > 0) {
-          resultText += `\nFigures:\n${result.figurePaths.join('\n')}`
-        }
-
-        return {
-          ...message,
-          content: `${message.content}${resultText}`
-        }
       }
       return message
     })
@@ -183,6 +171,8 @@ const App = (): JSX.Element => {
           return SystemPrompt.PreProcessor
         case 'analyzer':
           return SystemPrompt.Analyzer
+        case 'plotter':
+          return SystemPrompt.Plotter
         default:
           return SystemPrompt.Assistant
       }
