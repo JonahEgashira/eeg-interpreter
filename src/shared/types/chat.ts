@@ -1,3 +1,4 @@
+import { SystemPrompt } from '@renderer/lib/config/prompts'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface ExecutionResult {
@@ -13,6 +14,7 @@ export interface Message {
   isExecutionMessage?: boolean
   executionResult?: ExecutionResult
   filePaths?: string[]
+  systemPrompt: SystemPrompt
 }
 
 export interface Conversation {

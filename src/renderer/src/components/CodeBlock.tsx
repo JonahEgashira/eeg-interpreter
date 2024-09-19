@@ -3,7 +3,7 @@ import { runPythonCode } from '@renderer/lib/ipcFunctions'
 import { Play } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Conversation } from '@shared/types/chat'
+import { Conversation, Message } from '@shared/types/chat'
 import { ExecutionResult } from '@shared/types/chat'
 import {
   saveConversationWithPythonResult,
@@ -11,15 +11,17 @@ import {
   loadBase64Data
 } from '@renderer/lib/ipcFunctions'
 import ImageDisplay from './ImageDisplay'
+import { SystemPrompt } from '@renderer/lib/config/prompts'
 
 interface CodeBlockProps {
   conversation: Conversation
-  messageId: number
+  message: Message
   code: string
   handleExecutionResult: (
     messageId: number,
     result: ExecutionResult,
-    isLastMessage: boolean
+    isLastMessage: boolean,
+    prompt: SystemPrompt
   ) => void
   language: string
   inline: boolean
@@ -32,7 +34,7 @@ interface CodeBlockProps {
 const CodeBlock: React.FC<CodeBlockProps> = memo(
   ({
     conversation,
-    messageId,
+    message,
     code,
     handleExecutionResult,
     language,
@@ -43,27 +45,27 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     isLastMessage
   }) => {
     const executionResult = useMemo(() => {
-      return conversation?.messages.find(
-        (message) => message.id === messageId && message.executionResult
-      )?.executionResult
-    }, [conversation, messageId])
+      return conversation?.messages.find((m) => m.id === message.id && m.executionResult)
+        ?.executionResult
+    }, [conversation, message.id])
 
     const handleRun = async () => {
       try {
         const figureDir = await getConversationImagesDir(conversation.id)
         const result = await runPythonCode(figureDir, code, conversation.id)
-        await saveConversationWithPythonResult(conversation, messageId, result)
+        await saveConversationWithPythonResult(conversation, message.id, result)
 
         if (result.figurePaths) {
           const base64Images = (await Promise.all(result.figurePaths.map(loadBase64Data))).filter(
             (base64) => base64 !== null
           ) as string[]
-          handleBase64Update(conversation.id, messageId, base64Images)
+          handleBase64Update(conversation.id, message.id, base64Images)
         }
-        handleExecutionResult(messageId, result, isLastMessage)
+
+        handleExecutionResult(message.id, result, isLastMessage, message.systemPrompt)
       } catch (error) {
         const result: ExecutionResult = { code }
-        handleExecutionResult(messageId, result, isLastMessage)
+        handleExecutionResult(message.id, result, isLastMessage, message.systemPrompt)
       }
     }
 

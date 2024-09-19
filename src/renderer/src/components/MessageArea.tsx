@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback, memo } from 'react'
 import { Conversation, Message, ExecutionResult } from '@shared/types/chat'
 import { loadBase64Data } from '@renderer/lib/ipcFunctions'
 import MessageCard, { MessageTypeEnum } from './MessageCard'
+import { SystemPrompt } from '@renderer/lib/config/prompts'
 
 interface MessageAreaProps {
   conversation: Conversation
@@ -10,7 +11,8 @@ interface MessageAreaProps {
   handleExecutionResult: (
     messageId: number,
     result: ExecutionResult,
-    isLastMessage: boolean
+    isLastMessage: boolean,
+    prompt: SystemPrompt
   ) => void
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { streamText, generateText } from 'ai'
+import { streamText, generateText, generateObject } from 'ai'
 import { Message, Conversation, ExecutionResult, OpenAIModel } from '@shared/types/chat'
 import {
   saveConversation,
@@ -13,12 +13,12 @@ import { InputSchema } from './lib/chat/inputSchema'
 import { prompts, SystemPrompt, replacePlaceholders } from './lib/config/prompts'
 import { Tab } from './components/SidebarNavitation'
 import { updateConversation } from '@shared/types/chat'
-
 import ConversationsHistory from './components/ConversationsHistory'
 import SidebarNavigation from './components/SidebarNavitation'
 import Settings from './components/Settings'
 import ChatInterface from './components/ChatInterface'
 import FileArea from './components/FileArea'
+import { promptSchema } from './lib/config/prompts'
 
 const App = (): JSX.Element => {
   const [input, setInput] = useState<string>('')
@@ -30,7 +30,7 @@ const App = (): JSX.Element => {
   const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
-  const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.Assistant)
+  const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.FileConverter)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messageAreaRef = useRef<HTMLDivElement>(null)
 
@@ -156,20 +156,64 @@ const App = (): JSX.Element => {
     })
   }
 
-  const streamAIResponse = async (conversation: Conversation): Promise<Message> => {
+  const getSuitableAssistant = async (conversation: Conversation): Promise<SystemPrompt> => {
+    if (openaiApiKey === null) {
+      throw new Error('OpenAI API Key not set')
+    }
+
+    const openai = createOpenAI({ apiKey: openaiApiKey })
+    const result = await generateObject({
+      model: openai(openaiModel),
+      schema: promptSchema,
+      system: prompts.navigator,
+      messages: createMessagesForLLM(conversation)
+    })
+
+    const parsedResult = promptSchema.safeParse(result.object)
+
+    if (parsedResult.success) {
+      const taskType = parsedResult.data.task
+
+      console.log('Task type:', taskType)
+
+      switch (taskType) {
+        case 'file-converter':
+          return SystemPrompt.FileConverter
+        case 'pre-processor':
+          return SystemPrompt.PreProcessor
+        case 'analyzer':
+          return SystemPrompt.Analyzer
+        default:
+          return SystemPrompt.Assistant
+      }
+    } else {
+      console.error('Error parsing result:', parsedResult.error)
+      throw new Error('Error parsing result')
+    }
+  }
+
+  const streamAIResponse = async (
+    conversation: Conversation,
+    prompt: SystemPrompt
+  ): Promise<Message> => {
     if (openaiApiKey === null) {
       throw new Error('OpenAI API Key not set')
     }
     const openai = createOpenAI({ apiKey: openaiApiKey })
     const result = await streamText({
       model: openai(openaiModel),
-      system: prompts.system[systemPrompt],
+      system: prompts.system[prompt],
       messages: createMessagesForLLM(conversation)
     })
 
     let fullResponse = ''
     const aiMessageId = conversation.messages.length + 1
-    const newAIMessage: Message = { id: aiMessageId, role: 'assistant', content: '' }
+    const newAIMessage: Message = {
+      id: aiMessageId,
+      role: 'assistant',
+      content: '',
+      systemPrompt: prompt
+    }
 
     for await (const delta of result.textStream) {
       fullResponse += delta
@@ -217,7 +261,8 @@ const App = (): JSX.Element => {
         id: userMessageId,
         role: 'user',
         content: userInput,
-        filePaths: selectedFiles
+        filePaths: selectedFiles,
+        systemPrompt: systemPrompt
       }
 
       let updatedConversation = await createOrUpdateConversation({
@@ -230,10 +275,11 @@ const App = (): JSX.Element => {
 
       setInput('')
 
+      const newSystemPrompt = await getSuitableAssistant(updatedConversation)
+      handleSystemPromptChange(newSystemPrompt)
+
       setIsStreaming(true)
-
-      const aiMessage = await streamAIResponse(updatedConversation)
-
+      const aiMessage = await streamAIResponse(updatedConversation, newSystemPrompt)
       setIsStreaming(false)
 
       if (titlePromise) {
@@ -247,6 +293,9 @@ const App = (): JSX.Element => {
       setCurrentConversation(updatedConversation)
       updateConversationsState(updatedConversation)
 
+      console.log('Prompt:', newSystemPrompt)
+      console.log('Conversation updated:', updatedConversation)
+
       await saveConversation(updatedConversation)
       textareaRef.current?.focus()
     } catch (error) {
@@ -254,7 +303,7 @@ const App = (): JSX.Element => {
       setIsStreaming(false)
       textareaRef.current?.focus()
     }
-  }, [input, currentConversation, openaiApiKey, selectedFiles])
+  }, [input, currentConversation, openaiApiKey, selectedFiles, systemPrompt])
 
   const generateTitle = async (userInput: string) => {
     if (!openaiApiKey) {
@@ -276,7 +325,12 @@ const App = (): JSX.Element => {
   }
 
   const handleExecutionResult = useCallback(
-    async (messageId: number, executionResult: ExecutionResult, isLastMessage: boolean) => {
+    async (
+      messageId: number,
+      executionResult: ExecutionResult,
+      isLastMessage: boolean,
+      prompt: SystemPrompt
+    ) => {
       if (!currentConversation) return
 
       const updatedMessages = currentConversation.messages.map((message) =>
@@ -294,7 +348,8 @@ const App = (): JSX.Element => {
           id: updatedMessages.length + 1,
           role: 'user',
           content: output,
-          isExecutionMessage: true
+          isExecutionMessage: true,
+          systemPrompt: prompt
         })
       }
 
@@ -303,7 +358,7 @@ const App = (): JSX.Element => {
 
       if (isLastMessage) {
         setIsStreaming(true)
-        const aiMessage = await streamAIResponse(updatedConversation)
+        const aiMessage = await streamAIResponse(updatedConversation, prompt)
         setIsStreaming(false)
 
         const finalConversation = updateConversation(updatedConversation, aiMessage)

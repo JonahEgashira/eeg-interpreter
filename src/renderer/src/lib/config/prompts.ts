@@ -1,6 +1,10 @@
+import { z } from 'zod'
+
+export const promptSchema = z.object({
+  task: z.enum(['file-converter', 'pre-processor', 'analyzer', 'other'])
+})
+
 export enum SystemPrompt {
-  Default = 'default',
-  Python = 'python',
   Assistant = 'assistant',
   FileConverter = 'file-converter',
   PreProcessor = 'pre-processor',
@@ -9,12 +13,6 @@ export enum SystemPrompt {
 
 export const prompts = {
   system: {
-    [SystemPrompt.Python]: `
-      You are a helpful python assistant.
-      You are running on a local machine, and you will create python code that will be executed on the user's machine.
-      Make sure the program is complete and ready to run, and there must be only one program per message.
-      The user does not have input methods like input() in a terminal. Therefore, you must obtain all the necessary information through chat interactions.
-    `,
     [SystemPrompt.Assistant]: `
       You are a helpful assistant.
     `,
@@ -134,7 +132,17 @@ export const prompts = {
 
     Conversation:
     {{input}}
-  `
+  `,
+  navigator: `
+    You are EEG Processing Step Identifier.
+    Input: Conversation history about EEG processing and the user's latest input.
+    Output: Current processing step (It MUST be one of the following: file-converter, pre-processor, analyzer, other).
+    Rules:
+    Analyze the conversation history and user input. Determine the current step, based on the context.
+    Processing steps must starts with file conversion, followed by preprocessing, and then analysis.
+    You cannot skip steps.
+    ALWAYS output only one of the following: "file-converter", "pre-processor", "analyzer", "other".
+    `
 }
 
 export const replacePlaceholders = (template: string, values: Record<string, string>) => {

@@ -5,6 +5,7 @@ import Markdown from 'react-markdown'
 import { File } from 'lucide-react'
 import CodeBlock from './CodeBlock'
 import { Message as MessageType, Conversation, ExecutionResult } from '@shared/types/chat'
+import { SystemPrompt } from '@renderer/lib/config/prompts'
 
 export enum MessageTypeEnum {
   User = 'user',
@@ -22,7 +23,8 @@ interface MessageProps {
   handleExecutionResult: (
     messageId: number,
     result: ExecutionResult,
-    isLastMessage: boolean
+    isLastMessage: boolean,
+    prompt: SystemPrompt
   ) => void
   handleBase64Update: (conversationId: string, messageId: number, base64: string[]) => void
 }
@@ -73,7 +75,7 @@ const MessageCard: React.FC<MessageProps> = ({
                 return (
                   <CodeBlock
                     conversation={conversation}
-                    messageId={message.id}
+                    message={message}
                     code={codeContent}
                     handleExecutionResult={handleExecutionResult}
                     language={language}

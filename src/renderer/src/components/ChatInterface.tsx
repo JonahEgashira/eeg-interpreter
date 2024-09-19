@@ -13,7 +13,8 @@ interface ChatInterfaceProps {
   handleExecutionResult: (
     messageId: number,
     result: ExecutionResult,
-    isLastMessage: boolean
+    isLastMessage: boolean,
+    prompt: SystemPrompt
   ) => void
   handleFileSelect: (filePaths: string[]) => void
   selectedFiles: string[]
