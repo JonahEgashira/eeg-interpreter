@@ -27,7 +27,7 @@ const App = (): JSX.Element => {
   const [conversationFiles, setConversationFiles] = useState<string[]>([])
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [openaiApiKey, setOpenaiApiKey] = useState<string | null>(null)
-  const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o)
+  const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
   const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.FileConverter)
@@ -305,7 +305,7 @@ const App = (): JSX.Element => {
     })
 
     const result = await generateText({
-      model: createOpenAI({ apiKey: openaiApiKey })('gpt-4o-mini'),
+      model: createOpenAI({ apiKey: openaiApiKey })(OpenAIModel.GPT_4o_mini),
       prompt: titleGenerationPrompt
     })
 

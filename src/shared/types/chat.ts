@@ -28,7 +28,8 @@ export interface Conversation {
 
 export enum OpenAIModel {
   GPT_4o = 'gpt-4o',
-  GPT_4o_mini = 'gpt-4o-mini'
+  GPT_4o_mini = 'gpt-4o-mini',
+  o1_mini = 'o1-mini'
 }
 
 export type ConversationJSON = Omit<Conversation, 'createdAt' | 'updatedAt'> & {
