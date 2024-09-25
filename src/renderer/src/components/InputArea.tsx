@@ -9,7 +9,6 @@ interface InputAreaProps {
   handleFileSelect: (filePaths: string[]) => void
   selectedFiles: string[]
   isStreaming: boolean
-  openaiApiKey: string | null
   textAreaRef: React.RefObject<HTMLTextAreaElement>
 }
 
@@ -20,7 +19,6 @@ const InputArea: React.FC<InputAreaProps> = ({
   handleFileSelect,
   selectedFiles,
   isStreaming,
-  openaiApiKey,
   textAreaRef
 }) => {
   const [isComposing, setIsComposing] = useState(false)
@@ -107,7 +105,7 @@ const InputArea: React.FC<InputAreaProps> = ({
         <button
           onClick={handleSendMessage}
           className="p-2 bg-black text-white rounded-md disabled:opacity-50 hover:bg-gray-800 transition-colors"
-          disabled={!input.trim() || !openaiApiKey || isStreaming}
+          disabled={!input.trim() || isStreaming}
         >
           <Send size={22} />
         </button>

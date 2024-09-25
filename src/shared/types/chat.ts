@@ -26,10 +26,11 @@ export interface Conversation {
   updatedAt: Date
 }
 
-export enum OpenAIModel {
+export enum LLMModel {
   GPT_4o = 'gpt-4o',
   GPT_4o_mini = 'gpt-4o-mini',
-  o1_mini = 'o1-mini'
+  o1_mini = 'o1-mini',
+  gemini_1_5_pro = 'gemini-1.5-pro'
 }
 
 export type ConversationJSON = Omit<Conversation, 'createdAt' | 'updatedAt'> & {

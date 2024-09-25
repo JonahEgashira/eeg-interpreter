@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { streamText, generateText, generateObject } from 'ai'
-import { Message, Conversation, ExecutionResult, OpenAIModel } from '@shared/types/chat'
+import { Message, Conversation, ExecutionResult, LLMModel } from '@shared/types/chat'
 import {
   saveConversation,
   loadConversation,
@@ -9,6 +9,7 @@ import {
   getSettingsFromFile
 } from './lib/ipcFunctions'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { InputSchema } from './lib/chat/inputSchema'
 import { prompts, SystemPrompt, replacePlaceholders } from './lib/config/prompts'
 import { Tab } from './components/SidebarNavitation'
@@ -27,7 +28,8 @@ const App = (): JSX.Element => {
   const [conversationFiles, setConversationFiles] = useState<string[]>([])
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
   const [openaiApiKey, setOpenaiApiKey] = useState<string | null>(null)
-  const [openaiModel, setOpenaiModel] = useState<OpenAIModel>(OpenAIModel.GPT_4o_mini)
+  const [llmModel, setLlmModel] = useState<LLMModel>(LLMModel.GPT_4o_mini)
+  const [googleApiKey, setGoogleApiKey] = useState<string | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
   const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.FileConverter)
@@ -35,7 +37,7 @@ const App = (): JSX.Element => {
   const messageAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    fetchOpenaiApiKey()
+    fetchApiKeys()
     loadConversations()
   }, [])
 
@@ -49,14 +51,46 @@ const App = (): JSX.Element => {
     textareaRef.current?.focus()
   }, [currentConversation])
 
-  const fetchOpenaiApiKey = async () => {
+  const fetchApiKeys = async () => {
     try {
       const settings = await getSettingsFromFile()
-      if (settings && settings.openai_key) {
-        setOpenaiApiKey(settings.openai_key)
+      if (settings) {
+        if (settings.openai_key) {
+          setOpenaiApiKey(settings.openai_key)
+        }
+        if (settings.google_key) {
+          setGoogleApiKey(settings.google_key)
+        }
       }
     } catch (error) {
-      console.error('Error fetching OpenAI API key:', error)
+      console.error('Error fetching API keys:', error)
+    }
+  }
+
+  const getLLMInstance = (model: LLMModel = llmModel) => {
+    switch (model) {
+      case LLMModel.GPT_4o_mini:
+        if (!openaiApiKey) {
+          throw new Error('OpenAI API Key not set')
+        }
+        return createOpenAI({ apiKey: openaiApiKey })
+      case LLMModel.o1_mini:
+        if (!openaiApiKey) {
+          throw new Error('OpenAI API Key not set')
+        }
+        return createOpenAI({ apiKey: openaiApiKey })
+      case LLMModel.GPT_4o:
+        if (!openaiApiKey) {
+          throw new Error('OpenAI API Key not set')
+        }
+        return createOpenAI({ apiKey: openaiApiKey })
+      case LLMModel.gemini_1_5_pro:
+        if (!googleApiKey) {
+          throw new Error('Google API Key not set')
+        }
+        return createGoogleGenerativeAI({ apiKey: googleApiKey })
+      default:
+        throw new Error('Invalid LLM model')
     }
   }
 
@@ -145,13 +179,9 @@ const App = (): JSX.Element => {
   }
 
   const getSuitableAssistant = async (conversation: Conversation): Promise<SystemPrompt> => {
-    if (openaiApiKey === null) {
-      throw new Error('OpenAI API Key not set')
-    }
-
-    const openai = createOpenAI({ apiKey: openaiApiKey })
+    const llm = getLLMInstance(LLMModel.GPT_4o_mini)
     const result = await generateObject({
-      model: openai(openaiModel),
+      model: llm(llmModel),
       schema: promptSchema,
       system: prompts.navigator,
       messages: createMessagesForLLM(conversation)
@@ -161,8 +191,6 @@ const App = (): JSX.Element => {
 
     if (parsedResult.success) {
       const taskType = parsedResult.data.task
-
-      console.log('Task type:', taskType)
 
       switch (taskType) {
         case 'file-converter':
@@ -186,12 +214,12 @@ const App = (): JSX.Element => {
     conversation: Conversation,
     prompt: SystemPrompt
   ): Promise<Message> => {
-    if (openaiApiKey === null) {
-      throw new Error('OpenAI API Key not set')
-    }
-    const openai = createOpenAI({ apiKey: openaiApiKey })
+    const llm = getLLMInstance()
+
+    console.log(llmModel)
+
     const result = await streamText({
-      model: openai(openaiModel),
+      model: llm(llmModel),
       system: prompts.system[prompt],
       messages: createMessagesForLLM(conversation)
     })
@@ -241,7 +269,7 @@ const App = (): JSX.Element => {
 
   const handleSendMessage = useCallback(async () => {
     const userMessage = input.trim()
-    if (!userMessage || !openaiApiKey) return
+    if (!userMessage) return
     try {
       const parsedUserMessage = InputSchema.parse({ input: userMessage })
       const userMessageId = (currentConversation?.messages.length || 0) + 1
@@ -283,9 +311,6 @@ const App = (): JSX.Element => {
       setCurrentConversation(updatedConversation)
       updateConversationsState(updatedConversation)
 
-      console.log('Prompt:', newSystemPrompt)
-      console.log('Conversation updated:', updatedConversation)
-
       await saveConversation(updatedConversation)
       textareaRef.current?.focus()
     } catch (error) {
@@ -293,19 +318,16 @@ const App = (): JSX.Element => {
       setIsStreaming(false)
       textareaRef.current?.focus()
     }
-  }, [input, currentConversation, openaiApiKey, selectedFiles, systemPrompt])
+  }, [input, currentConversation, llmModel, selectedFiles, systemPrompt])
 
   const generateTitle = async (userInput: string) => {
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API Key not set')
-    }
-
+    const llm = getLLMInstance(LLMModel.GPT_4o_mini)
     const titleGenerationPrompt = replacePlaceholders(prompts.titleGeneration, {
       input: userInput
     })
 
     const result = await generateText({
-      model: createOpenAI({ apiKey: openaiApiKey })(OpenAIModel.GPT_4o_mini),
+      model: llm(llmModel),
       prompt: titleGenerationPrompt
     })
 
@@ -378,7 +400,7 @@ const App = (): JSX.Element => {
     [activeTab]
   )
 
-  const handleApiKeyChange = useCallback(
+  const handleOpenAIApiKeyChange = useCallback(
     (newApiKey: string) => {
       setOpenaiApiKey(newApiKey)
       console.log('New API Key saved:', newApiKey)
@@ -386,12 +408,20 @@ const App = (): JSX.Element => {
     [openaiApiKey]
   )
 
+  const handleGoogleAPIKeyChange = useCallback(
+    (newApiKey: string) => {
+      setGoogleApiKey(newApiKey)
+      console.log('New Google API Key saved:', newApiKey)
+    },
+    [googleApiKey]
+  )
+
   const handleModelChange = useCallback(
-    (newModel: OpenAIModel) => {
-      setOpenaiModel(newModel)
+    (newModel: LLMModel) => {
+      setLlmModel(newModel)
       console.log('New model selected:', newModel)
     },
-    [openaiModel]
+    [llmModel]
   )
 
   const handleSystemPromptChange = useCallback(
@@ -414,8 +444,7 @@ const App = (): JSX.Element => {
         selectedFiles={selectedFiles}
         textAreaRef={textareaRef}
         isStreaming={isStreaming}
-        openaiApiKey={openaiApiKey}
-        model={openaiModel}
+        model={llmModel}
         onModelChange={handleModelChange}
         systemPrompt={systemPrompt}
         onSystemPromptChange={handleSystemPromptChange}
@@ -424,8 +453,13 @@ const App = (): JSX.Element => {
   }
 
   const renderContent = () => {
-    if (activeTab === Tab.Settings || !openaiApiKey) {
-      return <Settings onApiKeyChange={handleApiKeyChange} />
+    if (activeTab === Tab.Settings) {
+      return (
+        <Settings
+          onOpenAIApiKeyChange={handleOpenAIApiKeyChange}
+          onGoogleApiKeyChange={handleGoogleAPIKeyChange}
+        />
+      )
     } else if (activeTab === Tab.Conversations) {
       return (
         <>

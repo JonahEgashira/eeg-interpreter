@@ -2,7 +2,7 @@ import React from 'react'
 import { Conversation, ExecutionResult } from '@shared/types/chat'
 import MessageArea from './MessageArea'
 import InputArea from './InputArea'
-import { OpenAIModel } from '@shared/types/chat'
+import { LLMModel } from '@shared/types/chat'
 import { SystemPrompt } from '@renderer/lib/config/prompts'
 
 interface ChatInterfaceProps {
@@ -20,9 +20,8 @@ interface ChatInterfaceProps {
   selectedFiles: string[]
   textAreaRef: React.RefObject<HTMLTextAreaElement>
   isStreaming: boolean
-  openaiApiKey: string | null
-  model: OpenAIModel
-  onModelChange: (newModel: OpenAIModel) => void
+  model: LLMModel
+  onModelChange: (newModel: LLMModel) => void
   systemPrompt: SystemPrompt
   onSystemPromptChange: (newPrompt: SystemPrompt) => void
 }
@@ -37,14 +36,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   selectedFiles,
   textAreaRef,
   isStreaming,
-  openaiApiKey,
   model,
   onModelChange,
   systemPrompt,
   onSystemPromptChange
 }) => {
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newModel = e.target.value as OpenAIModel
+    const newModel = e.target.value as LLMModel
     onModelChange(newModel)
   }
 
@@ -61,7 +59,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           onChange={handleModelChange}
           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
         >
-          {Object.values(OpenAIModel).map((model) => (
+          {Object.values(LLMModel).map((model) => (
             <option key={model} value={model}>
               {model}
             </option>
@@ -107,7 +105,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             handleFileSelect={handleFileSelect}
             selectedFiles={selectedFiles}
             isStreaming={isStreaming}
-            openaiApiKey={openaiApiKey}
             textAreaRef={textAreaRef}
           />
         </div>
