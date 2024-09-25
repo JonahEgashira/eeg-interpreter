@@ -4,16 +4,24 @@ import { getSettingsFromFile, saveSettingsToFile } from '@renderer/lib/ipcFuncti
 interface SettingsProps {
   onOpenAIApiKeyChange: (newApiKey: string) => void
   onGoogleApiKeyChange: (newApiKey: string) => void
+  onAnthropicApiKeyChange: (newApiKey: string) => void
 }
 
-const Settings: React.FC<SettingsProps> = ({ onOpenAIApiKeyChange, onGoogleApiKeyChange }) => {
+const Settings: React.FC<SettingsProps> = ({
+  onOpenAIApiKeyChange,
+  onGoogleApiKeyChange,
+  onAnthropicApiKeyChange
+}) => {
   const [openaiKey, setOpenaiKey] = useState<string>('')
   const [maskedOpenaiKey, setMaskedOpenaiKey] = useState<string>('')
   const [googleKey, setGoogleKey] = useState<string>('')
   const [maskedGoogleKey, setMaskedGoogleKey] = useState<string>('')
+  const [anthropicKey, setAnthropicKey] = useState<string>('')
+  const [maskedAnthropicKey, setMaskedAnthropicKey] = useState<string>('')
 
   const [isEditingOpenAI, setIsEditingOpenAI] = useState<boolean>(false)
   const [isEditingGoogle, setIsEditingGoogle] = useState<boolean>(false)
+  const [isEditingAnthropic, setIsEditingAnthropic] = useState<boolean>(false)
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -32,14 +40,22 @@ const Settings: React.FC<SettingsProps> = ({ onOpenAIApiKeyChange, onGoogleApiKe
           } else {
             setIsEditingGoogle(true)
           }
+          if (settings.anthropic_key) {
+            setAnthropicKey(settings.anthropic_key)
+            setMaskedAnthropicKey(`********${settings.anthropic_key.slice(-4)}`)
+          } else {
+            setIsEditingAnthropic(true)
+          }
         } else {
           setIsEditingOpenAI(true)
           setIsEditingGoogle(true)
+          setIsEditingAnthropic(true)
         }
       } catch (error) {
         console.error('Error loading settings:', error)
         setIsEditingOpenAI(true)
         setIsEditingGoogle(true)
+        setIsEditingAnthropic(true)
       }
     }
     loadSettings()
@@ -67,6 +83,17 @@ const Settings: React.FC<SettingsProps> = ({ onOpenAIApiKeyChange, onGoogleApiKe
     }
   }
 
+  const handleSaveAnthropicKey = async () => {
+    try {
+      await saveSettingsToFile({ ...(await getSettingsFromFile()), anthropic_key: anthropicKey })
+      onAnthropicApiKeyChange(anthropicKey)
+      setMaskedAnthropicKey(`********${anthropicKey.slice(-4)}`)
+      setIsEditingAnthropic(false)
+    } catch (error) {
+      console.error('Error saving Anthropic API key:', error)
+    }
+  }
+
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
@@ -75,7 +102,7 @@ const Settings: React.FC<SettingsProps> = ({ onOpenAIApiKeyChange, onGoogleApiKe
             <div className="text-center text-gray-500 max-w-md w-full">
               <h2 className="text-2xl font-bold mb-4">OpenAI API Key</h2>
               {maskedOpenaiKey ? (
-                <p className="mb-6">Your current API key ends in {maskedOpenaiKey.slice(-4)}</p> // More helpful message
+                <p className="mb-6">Your current API key ends in {maskedOpenaiKey.slice(-4)}</p>
               ) : (
                 <p className="mb-6">Please enter your OpenAI API Key.</p>
               )}
@@ -99,7 +126,7 @@ const Settings: React.FC<SettingsProps> = ({ onOpenAIApiKeyChange, onGoogleApiKe
               </div>
               <button
                 onClick={handleSaveOpenAIKey}
-                className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors duration-300 mb-8" // Added margin
+                className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors duration-300 mb-8"
               >
                 Save OpenAI API Key
               </button>
@@ -125,11 +152,37 @@ const Settings: React.FC<SettingsProps> = ({ onOpenAIApiKeyChange, onGoogleApiKe
               </div>
               <button
                 onClick={handleSaveGoogleKey}
-                className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors duration-300"
+                className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors duration-300 mb-8"
               >
                 Save Google API Key
               </button>
-            </div>{' '}
+
+              <h2 className="text-2xl font-bold mb-4 mt-8">Anthropic API Key</h2>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={isEditingAnthropic ? anthropicKey : maskedAnthropicKey}
+                  onChange={(e) => setAnthropicKey(e.target.value)}
+                  className="block w-full px-3 py-2 mb-4 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your Anthropic API Key"
+                  readOnly={!isEditingAnthropic && !!maskedAnthropicKey}
+                />
+                {maskedAnthropicKey && !isEditingAnthropic && (
+                  <button
+                    onClick={() => setIsEditingAnthropic(true)}
+                    className="absolute right-2 top-2 text-gray-500 hover:text-gray-600"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={handleSaveAnthropicKey}
+                className="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors duration-300"
+              >
+                Save Anthropic API Key
+              </button>
+            </div>
           </div>
         </div>
       </div>

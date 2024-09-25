@@ -83,8 +83,6 @@ const InputArea: React.FC<InputAreaProps> = ({
       )}
 
       <div className="flex items-center w-full space-x-2">
-        {' '}
-        {/* Add space-x-2 for more gap between elements */}
         <label className="p-2 bg-gray-200 text-gray-700 rounded-md cursor-pointer hover:bg-gray-300 transition-colors">
           <Paperclip size={22} />
           <input type="file" onChange={handleFileChange} className="hidden" multiple />

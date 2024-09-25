@@ -4,6 +4,7 @@ import MessageArea from './MessageArea'
 import InputArea from './InputArea'
 import { LLMModel } from '@shared/types/chat'
 import { SystemPrompt } from '@renderer/lib/config/prompts'
+import { Switch } from '@headlessui/react'
 
 interface ChatInterfaceProps {
   currentConversation: Conversation | null
@@ -24,6 +25,8 @@ interface ChatInterfaceProps {
   onModelChange: (newModel: LLMModel) => void
   systemPrompt: SystemPrompt
   onSystemPromptChange: (newPrompt: SystemPrompt) => void
+  autoAssistantEnabled: boolean
+  setAutoAssistantEnabled: (enabled: boolean) => void
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -39,7 +42,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   model,
   onModelChange,
   systemPrompt,
-  onSystemPromptChange
+  onSystemPromptChange,
+  autoAssistantEnabled,
+  setAutoAssistantEnabled
 }) => {
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value as LLMModel
@@ -76,6 +81,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </option>
           ))}
         </select>
+        <div className="mt-4 flex items-center">
+          <Switch
+            checked={autoAssistantEnabled}
+            onChange={setAutoAssistantEnabled}
+            className={`${
+              autoAssistantEnabled ? 'bg-blue-600' : 'bg-gray-200'
+            } relative inline-flex h-6 w-11 items-center rounded-full`}
+          >
+            <span className="sr-only">Enable Auto Assistant</span>
+            <span
+              className={`${
+                autoAssistantEnabled ? 'translate-x-6' : 'translate-x-1'
+              } inline-block h-4 w-4 transform bg-white rounded-full transition`}
+            />
+          </Switch>
+          <span className="ml-2 text-sm">Auto Assistant</span>
+        </div>
       </div>
       <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
         <div className="max-w-4xl w-full h-full flex flex-col">

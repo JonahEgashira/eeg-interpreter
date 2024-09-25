@@ -10,6 +10,7 @@ import {
 } from './lib/ipcFunctions'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createAnthropic } from '@ai-sdk/anthropic'
 import { InputSchema } from './lib/chat/inputSchema'
 import { prompts, SystemPrompt, replacePlaceholders } from './lib/config/prompts'
 import { Tab } from './components/SidebarNavitation'
@@ -27,9 +28,11 @@ const App = (): JSX.Element => {
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
   const [conversationFiles, setConversationFiles] = useState<string[]>([])
   const [selectedFiles, setSelectedFiles] = useState<string[]>([])
+  const [autoAssistantEnabled, setAutoAssistantEnabled] = useState<boolean>(false)
   const [openaiApiKey, setOpenaiApiKey] = useState<string | null>(null)
   const [llmModel, setLlmModel] = useState<LLMModel>(LLMModel.GPT_4o_mini)
   const [googleApiKey, setGoogleApiKey] = useState<string | null>(null)
+  const [anthropicApiKey, setAnthropicApiKey] = useState<string | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
   const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.FileConverter)
@@ -61,6 +64,9 @@ const App = (): JSX.Element => {
         if (settings.google_key) {
           setGoogleApiKey(settings.google_key)
         }
+        if (settings.anthropic_key) {
+          setAnthropicApiKey(settings.anthropic_key)
+        }
       }
     } catch (error) {
       console.error('Error fetching API keys:', error)
@@ -68,6 +74,7 @@ const App = (): JSX.Element => {
   }
 
   const getLLMInstance = (model: LLMModel = llmModel) => {
+    console.log('Model:', model)
     switch (model) {
       case LLMModel.GPT_4o_mini:
         if (!openaiApiKey) {
@@ -89,6 +96,16 @@ const App = (): JSX.Element => {
           throw new Error('Google API Key not set')
         }
         return createGoogleGenerativeAI({ apiKey: googleApiKey })
+      case LLMModel.gemini_1_5_flash:
+        if (!googleApiKey) {
+          throw new Error('Google API Key not set')
+        }
+        return createGoogleGenerativeAI({ apiKey: googleApiKey })
+      case LLMModel.claude_3_5_sonnet:
+        if (!anthropicApiKey) {
+          throw new Error('Anthropic API Key not set')
+        }
+        return createAnthropic({ apiKey: anthropicApiKey })
       default:
         throw new Error('Invalid LLM model')
     }
@@ -216,13 +233,13 @@ const App = (): JSX.Element => {
   ): Promise<Message> => {
     const llm = getLLMInstance()
 
-    console.log(llmModel)
-
     const result = await streamText({
       model: llm(llmModel),
       system: prompts.system[prompt],
       messages: createMessagesForLLM(conversation)
     })
+
+    console.log('Streaming AI response:', result)
 
     let fullResponse = ''
     const aiMessageId = conversation.messages.length + 1
@@ -293,7 +310,9 @@ const App = (): JSX.Element => {
 
       setInput('')
 
-      const newSystemPrompt = await getSuitableAssistant(updatedConversation)
+      const newSystemPrompt = autoAssistantEnabled
+        ? await getSuitableAssistant(updatedConversation)
+        : systemPrompt
       handleSystemPromptChange(newSystemPrompt)
 
       setIsStreaming(true)
@@ -318,7 +337,7 @@ const App = (): JSX.Element => {
       setIsStreaming(false)
       textareaRef.current?.focus()
     }
-  }, [input, currentConversation, llmModel, selectedFiles, systemPrompt])
+  }, [input, currentConversation, llmModel, selectedFiles, systemPrompt, autoAssistantEnabled])
 
   const generateTitle = async (userInput: string) => {
     const llm = getLLMInstance(LLMModel.GPT_4o_mini)
@@ -327,7 +346,7 @@ const App = (): JSX.Element => {
     })
 
     const result = await generateText({
-      model: llm(llmModel),
+      model: llm(LLMModel.GPT_4o_mini),
       prompt: titleGenerationPrompt
     })
 
@@ -403,7 +422,6 @@ const App = (): JSX.Element => {
   const handleOpenAIApiKeyChange = useCallback(
     (newApiKey: string) => {
       setOpenaiApiKey(newApiKey)
-      console.log('New API Key saved:', newApiKey)
     },
     [openaiApiKey]
   )
@@ -411,9 +429,15 @@ const App = (): JSX.Element => {
   const handleGoogleAPIKeyChange = useCallback(
     (newApiKey: string) => {
       setGoogleApiKey(newApiKey)
-      console.log('New Google API Key saved:', newApiKey)
     },
     [googleApiKey]
+  )
+
+  const handleAnthropicAPIKeyChange = useCallback(
+    (newApiKey: string) => {
+      setAnthropicApiKey(newApiKey)
+    },
+    [anthropicApiKey]
   )
 
   const handleModelChange = useCallback(
@@ -448,6 +472,8 @@ const App = (): JSX.Element => {
         onModelChange={handleModelChange}
         systemPrompt={systemPrompt}
         onSystemPromptChange={handleSystemPromptChange}
+        autoAssistantEnabled={autoAssistantEnabled}
+        setAutoAssistantEnabled={setAutoAssistantEnabled}
       />
     )
   }
@@ -458,6 +484,7 @@ const App = (): JSX.Element => {
         <Settings
           onOpenAIApiKeyChange={handleOpenAIApiKeyChange}
           onGoogleApiKeyChange={handleGoogleAPIKeyChange}
+          onAnthropicApiKeyChange={handleAnthropicAPIKeyChange}
         />
       )
     } else if (activeTab === Tab.Conversations) {
