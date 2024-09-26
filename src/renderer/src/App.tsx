@@ -239,8 +239,6 @@ const App = (): JSX.Element => {
       messages: createMessagesForLLM(conversation)
     })
 
-    console.log('Streaming AI response:', result)
-
     let fullResponse = ''
     const aiMessageId = conversation.messages.length + 1
     const newAIMessage: Message = {
