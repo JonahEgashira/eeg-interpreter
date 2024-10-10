@@ -81,11 +81,6 @@ const App = (): JSX.Element => {
           throw new Error('OpenAI API Key not set')
         }
         return createOpenAI({ apiKey: openaiApiKey })
-      case LLMModel.o1_mini:
-        if (!openaiApiKey) {
-          throw new Error('OpenAI API Key not set')
-        }
-        return createOpenAI({ apiKey: openaiApiKey })
       case LLMModel.GPT_4o:
         if (!openaiApiKey) {
           throw new Error('OpenAI API Key not set')
