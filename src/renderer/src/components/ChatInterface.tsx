@@ -65,7 +65,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="flex flex-col flex-grow">
-  <div className="absolute top-4 right-4 bg-white p-2 rounded shadow">
+      <div className="absolute top-4 right-4 bg-white p-2 rounded shadow">
         <button
           onClick={toggleExpand}
           className="flex items-center justify-center w-8 h-8 mb-2 text-gray-500 hover:text-gray-700 focus:outline-none"
