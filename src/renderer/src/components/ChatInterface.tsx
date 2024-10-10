@@ -65,10 +65,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="flex flex-col flex-grow">
-      <div className="absolute top-4 right-4 bg-white p-2 rounded shadow">
+      <div className="absolute top-4 right-4 bg-white p-2 rounded shadow flex flex-col items-end">
         <button
           onClick={toggleExpand}
-          className="flex items-center justify-center w-8 h-8 mb-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+          className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 focus:outline-none"
         >
           {isExpanded ? (
             <ChevronUpIcon className="w-5 h-5" />
@@ -77,7 +77,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           )}
         </button>
         {isExpanded && (
-          <div className="space-y-4">
+          <div className="space-y-4 mt-2">
             {/* Model Selector */}
             <select
               value={model}
