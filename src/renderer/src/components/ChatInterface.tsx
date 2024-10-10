@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Conversation, ExecutionResult } from '@shared/types/chat'
 import MessageArea from './MessageArea'
 import InputArea from './InputArea'
 import { LLMModel } from '@shared/types/chat'
 import { SystemPrompt } from '@renderer/lib/config/prompts'
 import { Switch } from '@headlessui/react'
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid'
 
 interface ChatInterfaceProps {
   currentConversation: Conversation | null
@@ -46,6 +47,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   autoAssistantEnabled,
   setAutoAssistantEnabled
 }) => {
+  const [isExpanded, setIsExpanded] = useState(true)
+
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value as LLMModel
     onModelChange(newModel)
@@ -56,51 +59,74 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     onSystemPromptChange(newPrompt)
   }
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded)
+  }
+
   return (
     <div className="flex flex-col flex-grow">
-      <div className="absolute top-4 right-4">
-        <select
-          value={model}
-          onChange={handleModelChange}
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+  <div className="absolute top-4 right-4 bg-white p-2 rounded shadow">
+        <button
+          onClick={toggleExpand}
+          className="flex items-center justify-center w-8 h-8 mb-2 text-gray-500 hover:text-gray-700 focus:outline-none"
         >
-          {Object.values(LLMModel).map((model) => (
-            <option key={model} value={model}>
-              {model}
-            </option>
-          ))}
-        </select>
-        <select
-          value={systemPrompt}
-          onChange={handleSystemPromptChange}
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-        >
-          {Object.values(SystemPrompt).map((prompt) => (
-            <option key={prompt} value={prompt}>
-              {prompt}
-            </option>
-          ))}
-        </select>
-        <div className="mt-4 flex items-center">
-          <Switch
-            checked={autoAssistantEnabled}
-            onChange={setAutoAssistantEnabled}
-            className={`${
-              autoAssistantEnabled ? 'bg-blue-600' : 'bg-gray-200'
-            } relative inline-flex h-6 w-11 items-center rounded-full`}
-          >
-            <span className="sr-only">Enable Auto Assistant</span>
-            <span
-              className={`${
-                autoAssistantEnabled ? 'translate-x-6' : 'translate-x-1'
-              } inline-block h-4 w-4 transform bg-white rounded-full transition`}
-            />
-          </Switch>
-          <span className="ml-2 text-sm">Auto Assistant</span>
-        </div>
+          {isExpanded ? (
+            <ChevronUpIcon className="w-5 h-5" />
+          ) : (
+            <ChevronDownIcon className="w-5 h-5" />
+          )}
+        </button>
+        {isExpanded && (
+          <div className="space-y-4">
+            {/* Model Selector */}
+            <select
+              value={model}
+              onChange={handleModelChange}
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            >
+              {Object.values(LLMModel).map((model) => (
+                <option key={model} value={model}>
+                  {model}
+                </option>
+              ))}
+            </select>
+
+            {/* System Prompt Selector */}
+            <select
+              value={systemPrompt}
+              onChange={handleSystemPromptChange}
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+            >
+              {Object.values(SystemPrompt).map((prompt) => (
+                <option key={prompt} value={prompt}>
+                  {prompt}
+                </option>
+              ))}
+            </select>
+
+            {/* Auto Assistant Toggle */}
+            <div className="flex items-center">
+              <Switch
+                checked={autoAssistantEnabled}
+                onChange={setAutoAssistantEnabled}
+                className={`${
+                  autoAssistantEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                } relative inline-flex h-6 w-11 items-center rounded-full`}
+              >
+                <span className="sr-only">Enable Auto Assistant</span>
+                <span
+                  className={`${
+                    autoAssistantEnabled ? 'translate-x-6' : 'translate-x-1'
+                  } inline-block h-4 w-4 transform bg-white rounded-full transition`}
+                />
+              </Switch>
+              <span className="ml-2 text-sm">Auto Assistant</span>
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex-grow flex items-center justify-center p-4 overflow-auto">
-        <div className="max-w-4xl w-full h-full flex flex-col">
+        <div className="max-w-5xl w-full h-full flex flex-col">
           {currentConversation ? (
             <MessageArea
               conversation={currentConversation}

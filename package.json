@@ -28,6 +28,7 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "@headlessui/react": "^2.1.8",
+    "@heroicons/react": "^2.1.5",
     "@jupyterlab/services": "^7.2.4",
     "ai": "^3.3.14",
     "class-variance-authority": "^0.7.0",
