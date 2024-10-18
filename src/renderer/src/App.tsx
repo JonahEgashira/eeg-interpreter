@@ -211,8 +211,6 @@ const App = (): JSX.Element => {
           return SystemPrompt.PreProcessor
         case 'analyzer':
           return SystemPrompt.Analyzer
-        case 'plotter':
-          return SystemPrompt.Plotter
         default:
           return SystemPrompt.Assistant
       }

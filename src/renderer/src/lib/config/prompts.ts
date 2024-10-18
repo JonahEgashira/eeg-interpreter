@@ -1,16 +1,14 @@
 import { z } from 'zod'
 
 export const promptSchema = z.object({
-  task: z.enum(['file-converter', 'pre-processor', 'analyzer', 'plotter', 'other'])
+  task: z.enum(['file-converter', 'pre-processor', 'analyzer', 'other'])
 })
 
 export enum SystemPrompt {
   Assistant = 'assistant',
   FileConverter = 'file-converter',
   PreProcessor = 'pre-processor',
-  Analyzer = 'analyzer',
-  Plotter = 'plotter',
-  Interpreter = 'interpreter'
+  Analyzer = 'analyzer'
 }
 
 const fileNamingGuidelines = `
@@ -133,8 +131,7 @@ export const prompts = {
     Always output only one of the following processing steps:
     "file-converter": When handling raw EEG data files and converting them into a usable format.
     "pre-processor": When performing tasks such as filtering, removing artifacts, or segmenting the data (epoching).
-    "analyzer": When performing data analysis, such as extracting features or computing metrics from the EEG data.
-    "plotter": When visualizing the data, which can occur at any stage based on the user's request.
+    "analyzer": When performing data analysis, such as extracting features or computing metrics from the EEG data, and visualizing the results.
     "other": When the task does not fit into the categories above.
     `
 }
