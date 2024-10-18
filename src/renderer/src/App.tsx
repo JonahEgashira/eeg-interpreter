@@ -340,7 +340,8 @@ const App = (): JSX.Element => {
 
     const result = await generateText({
       model: llm(LLMModel.GPT_4o_mini),
-      prompt: titleGenerationPrompt
+      prompt: titleGenerationPrompt,
+      temperature: 0.5
     })
 
     const title = result.text.replace(/^["']|["']$/g, '').trim()
