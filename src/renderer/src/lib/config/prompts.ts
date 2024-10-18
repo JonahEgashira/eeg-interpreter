@@ -13,6 +13,14 @@ export enum SystemPrompt {
   Interpreter = 'interpreter'
 }
 
+const executionGuidelines = `
+  Execution guidelines:
+
+  Each time the code is executed, the standard output from the code execution will be passed to you.
+  Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
+  When you get an error from the output, try to debug the code by using standard output, and fix the code. You can also ask the user for more information.
+`
+
 export const prompts = {
   system: {
     [SystemPrompt.Assistant]: `
@@ -38,9 +46,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution guidelines:
-       Each time the code is executed, the standard output from the code execution will be passed to you.
-       Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
+       ${executionGuidelines}
     `,
     [SystemPrompt.PreProcessor]: `
        You are a Pre-Processor within the EEG-Interpreter assistant, focused on preparing EEG data for analysis using Python MNE.
@@ -59,9 +65,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution guidelines:
-       Each time the code is executed, the standard output from the code execution will be passed to you.
-       Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
+       ${executionGuidelines}
     `,
     [SystemPrompt.Analyzer]: `
        You are an Analyzer within the EEG-Interpreter assistant, responsible for analyzing preprocessed EEG data using Python MNE.
@@ -85,9 +89,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution guidelines:
-       Each time the code is executed, the standard output from the code execution will be passed to you.
-       Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
+       ${executionGuidelines}
     `,
     [SystemPrompt.Plotter]: `
        You are a Plotter assistant, focused on visualizing EEG data using Python.
@@ -108,9 +110,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution guidelines:
-       Each time the code is executed, the standard output from the code execution will be passed to you.
-       Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
+       ${executionGuidelines}
     `,
     [SystemPrompt.Interpreter]: `
        You are an EEG Data Processing Assistant. Using Python MNE, you will convert various EEG data formats (CSV, MAT, EEG, etc.) into a single .fif file and proceed through preprocessing, analysis, and visualization.
