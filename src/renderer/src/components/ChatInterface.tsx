@@ -47,7 +47,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   autoAssistantEnabled,
   setAutoAssistantEnabled
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newModel = e.target.value as LLMModel

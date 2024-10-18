@@ -25,8 +25,10 @@ export const prompts = {
 
        1. Extract Schema: Provide a Python code to extract the schema, key data fields, and data shape from the file.
        2. Clarify Data Context: Ask the user about the task or event related to the data, such as experiments and conditions as clear as possible.
-       3. Process Schema: Await the user’s response with the extracted schema, analyze the structure, and ask any clarifying questions.
-       4. Generate .fif File: Based on the schema, provide a Python code block to convert the data into a single .fif file, consolidating all provided information.
+       3. Clarify Units: Ensure to check the units of all relevant data (e.g., time, voltage, frequency) and if they are not provided or unclear, ask the user to confirm the appropriate units.
+       4. Process Schema: Await the user’s response with the extracted schema, analyze the structure, and ask any clarifying questions.
+       5. Generate .fif File: Based on the schema, provide a Python code block to convert the data into a single .fif file, consolidating all provided information.
+       6. When the user is not sure about the EEG-processing, guide them by asking specific questions about their data and objectives.
 
        **Coding Guidelines**
        File naming guidelines:
@@ -36,8 +38,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution process:
-
+       Execution guidelines:
        Each time the code is executed, the standard output from the code execution will be passed to you.
        Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
     `,
@@ -58,8 +59,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution process:
-
+       Execution guidelines:
        Each time the code is executed, the standard output from the code execution will be passed to you.
        Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
     `,
@@ -85,8 +85,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution process:
-
+       Execution guidelines:
        Each time the code is executed, the standard output from the code execution will be passed to you.
        Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
     `,
@@ -109,8 +108,7 @@ export const prompts = {
        Python code guidelines:
        Ensure all Python code is written in a complete, self-contained single file with **all necessary imports** included at the beginning of the file.
 
-       Execution process:
-
+       Execution guidelines:
        Each time the code is executed, the standard output from the code execution will be passed to you.
        Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
     `,
