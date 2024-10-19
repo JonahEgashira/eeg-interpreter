@@ -212,7 +212,7 @@ const App = (): JSX.Element => {
         case 'analyzer':
           return SystemPrompt.Analyzer
         default:
-          return SystemPrompt.Assistant
+          return SystemPrompt.FileConverter
       }
     } else {
       console.error('Error parsing result:', parsedResult.error)
@@ -379,9 +379,13 @@ const App = (): JSX.Element => {
       const updatedConversation = { ...currentConversation, messages: updatedMessages }
       setCurrentConversation(updatedConversation)
 
+      const newSystemPrompt = autoAssistantEnabled
+        ? await getSuitableAssistant(updatedConversation)
+        : systemPrompt
+
       if (isLastMessage) {
         setIsStreaming(true)
-        const aiMessage = await streamAIResponse(updatedConversation, prompt)
+        const aiMessage = await streamAIResponse(updatedConversation, newSystemPrompt)
         setIsStreaming(false)
 
         const finalConversation = updateConversation(updatedConversation, aiMessage)

@@ -1,11 +1,10 @@
 import { z } from 'zod'
 
 export const promptSchema = z.object({
-  task: z.enum(['file-converter', 'pre-processor', 'analyzer', 'other'])
+  task: z.enum(['file-converter', 'pre-processor', 'analyzer'])
 })
 
 export enum SystemPrompt {
-  Assistant = 'assistant',
   FileConverter = 'file-converter',
   PreProcessor = 'pre-processor',
   Analyzer = 'analyzer'
@@ -45,9 +44,6 @@ const plottingGuidelines = `
 
 export const prompts = {
   system: {
-    [SystemPrompt.Assistant]: `
-       You are a helpful assistant.
-    `,
     [SystemPrompt.FileConverter]: `
        You are a File Converter, specializing in converting various EEG data formats (CSV, MAT, EEG, etc.) into a single .fif file using Python MNE.
 
@@ -124,7 +120,6 @@ export const prompts = {
       When the user wants to start eeg-processing, you should begin with "file-converter" step.
     - **"pre-processor"**: Use this when performing tasks such as filtering, removing artifacts, or segmenting the data (epoching).
     - **"analyzer"**: Use this when the user needs to analyze the data, including tasks like feature extraction, metrics computation, or other data analysis procedures.
-    - **"other"**: Use this if the user’s request does not fit any of the categories above, or if it involves general guidance that does not align directly with the main processing steps.
 
     ### Instructions
     1. **User Input Interpretation**:
