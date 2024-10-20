@@ -191,7 +191,7 @@ const App = (): JSX.Element => {
   }
 
   const getSuitableAssistant = async (conversation: Conversation): Promise<SystemPrompt> => {
-    const llm = getLLMInstance(LLMModel.GPT_4o_mini)
+    const llm = getLLMInstance(llmModel)
     const result = await generateObject({
       model: llm(llmModel),
       schema: promptSchema,
@@ -382,6 +382,7 @@ const App = (): JSX.Element => {
       const newSystemPrompt = autoAssistantEnabled
         ? await getSuitableAssistant(updatedConversation)
         : systemPrompt
+      handleSystemPromptChange(newSystemPrompt)
 
       if (isLastMessage) {
         setIsStreaming(true)
