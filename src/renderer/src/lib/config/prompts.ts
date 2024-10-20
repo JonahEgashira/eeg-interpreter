@@ -38,7 +38,7 @@ const plottingGuidelines = `
 
   - By default, use 'scalings='auto'' when plotting EEG data unless the user specifies otherwise.
   - Display figures instead of saving them when plotting.
-  - Ensure 'block=True' is set to display plots, particularly for raw data, when the plotting methods support it.
+  - Ensure 'block=True' is set to display plots for raw data.
   - Always confirm user preferences before generating plots.
 `
 
@@ -49,7 +49,7 @@ export const prompts = {
 
        ## Responsibilities:
 
-       ### 1. Extract Data Schema: Provide Python code to extract and display key data fields, metadata, and data shapes.
+       ### 1. Extract Data Schema: Provide Python code to extract and display key data fields, metadata, and data shapes. Make sure you retrieve correct electrode placement information.
        ### 2. Clarify Experiment Context: After the user provides the output of the data schema, and key data fields, ask the user to clarify the experiment, task, conditions, or events related to the EEG data.
        ### 3. Transfer All Data: Generate python code to transfer all data to the .fif file, including all channels, events, metadata, and any additional information in the original file. Avoid generating code unless the user provides the necessary information and context about the experiment.
        ### 4. Confirm Data Units: Ask the user to confirm units (e.g., time, voltage, frequency) if they are missing or unclear.
