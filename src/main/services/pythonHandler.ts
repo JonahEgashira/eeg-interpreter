@@ -7,10 +7,14 @@ import { handleFigureData } from './figureHandler'
 import { Conversation, ExecutionResult, addExecutionResult } from '@shared/types/chat'
 import * as crypto from 'crypto'
 import { getConversationDir, saveConversation } from './jsonFileHandler'
+import fixPath from 'fix-path'
+import log from 'electron-log'
 
 const JUPYTER_TOKEN = crypto.randomBytes(16).toString('hex')
 const JUPYTER_PORT = 8888
 let jupyterProcess: ChildProcess | null = null
+
+fixPath()
 
 const userDataPath = app.getPath('userData')
 process.chdir(userDataPath)
@@ -19,11 +23,13 @@ function getJupyterPath(): Promise<string> {
   return new Promise((resolve, reject) => {
     exec('which jupyter', (error, stdout, stderr) => {
       if (error) {
-        console.error(`Error finding jupyter: ${stderr}`)
+        log.error(`Error finding jupyter: ${stderr}`)
         return reject(new Error(`Error finding jupyter: ${stderr}`))
       }
       const jupyterPath = stdout.trim()
+      log.info(`Jupyter executable path: ${jupyterPath}`)
       if (!jupyterPath) {
+        log.error('Jupyter path not found')
         return reject(new Error('Jupyter path not found'))
       }
       resolve(jupyterPath)
