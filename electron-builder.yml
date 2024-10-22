@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: eeg-interpreter
+productName: EEG Interpreter
 directories:
   buildResources: build
 files:
@@ -21,6 +21,8 @@ nsis:
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
+    - CFBundleGetInfoString: Developed by Jonah Egashira
+    - NSHumanReadableCopyright: Copyright 2024 Jonah Egashira
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
