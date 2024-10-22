@@ -15,39 +15,63 @@ let jupyterProcess: ChildProcess | null = null
 const userDataPath = app.getPath('userData')
 process.chdir(userDataPath)
 
+function getJupyterPath(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec('which jupyter', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error finding jupyter: ${stderr}`)
+        return reject(new Error(`Error finding jupyter: ${stderr}`))
+      }
+      const jupyterPath = stdout.trim()
+      if (!jupyterPath) {
+        return reject(new Error('Jupyter path not found'))
+      }
+      resolve(jupyterPath)
+    })
+  })
+}
+
 export function startJupyterServer(): Promise<void> {
   return new Promise((resolve, reject) => {
-    jupyterProcess = spawn('jupyter', [
-      'notebook',
-      '--no-browser',
-      `--port=${JUPYTER_PORT}`,
-      `--IdentityProvider.token=${JUPYTER_TOKEN}`,
-      '--ServerApp.disable_check_xsrf=True'
-    ])
+    getJupyterPath().then((jupyterPath) => {
+      jupyterProcess = spawn(
+        jupyterPath,
+        [
+          'notebook',
+          '--no-browser',
+          `--port=${JUPYTER_PORT}`,
+          `--IdentityProvider.token=${JUPYTER_TOKEN}`,
+          '--ServerApp.disable_check_xsrf=True'
+        ],
+        {
+          env: { ...process.env, PATH: `${path.dirname(jupyterPath)}:${process.env.PATH}` }
+        }
+      )
 
-    if (!jupyterProcess) {
-      return reject(new Error('Failed to start Jupyter server'))
-    }
-
-    jupyterProcess.stdout?.on('data', (data) => {
-      console.log(`Jupyter stdout: ${data}`)
-      if (data.toString().includes(`http://localhost:${JUPYTER_PORT}/`)) {
-        resolve()
+      if (!jupyterProcess) {
+        return reject(new Error('Failed to start Jupyter server'))
       }
-    })
 
-    jupyterProcess.stderr?.on('data', (data) => {
-      console.error(`Jupyter stderr: ${data}`)
-    })
+      jupyterProcess.stdout?.on('data', (data) => {
+        console.log(`Jupyter stdout: ${data}`)
+        if (data.toString().includes(`http://localhost:${JUPYTER_PORT}/`)) {
+          resolve()
+        }
+      })
 
-    jupyterProcess.on('close', (code) => {
-      console.log(`Jupyter server exited with code ${code}`)
-      jupyterProcess = null
-    })
+      jupyterProcess.stderr?.on('data', (data) => {
+        console.error(`Jupyter stderr: ${data}`)
+      })
 
-    jupyterProcess.on('error', (err) => {
-      console.error('Failed to start Jupyter server:', err)
-      reject(err)
+      jupyterProcess.on('close', (code) => {
+        console.log(`Jupyter server exited with code ${code}`)
+        jupyterProcess = null
+      })
+
+      jupyterProcess.on('error', (err) => {
+        console.error('Failed to start Jupyter server:', err)
+        reject(err)
+      })
     })
   })
 }
