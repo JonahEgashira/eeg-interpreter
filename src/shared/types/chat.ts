@@ -31,7 +31,7 @@ export enum LLMModel {
   GPT_4o_mini = 'gpt-4o-mini',
   gemini_1_5_pro = 'gemini-1.5-pro-002',
   gemini_1_5_flash = 'gemini-1.5-flash-002',
-  claude_3_5_sonnet = 'claude-3-5-sonnet-20240620'
+  claude_3_5_sonnet = 'claude-3-5-sonnet-latest'
 }
 
 export type ConversationJSON = Omit<Conversation, 'createdAt' | 'updatedAt'> & {
