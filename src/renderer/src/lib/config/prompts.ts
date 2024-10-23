@@ -55,7 +55,7 @@ export const prompts = {
 
        2. **Clarify Experiment Context:**
           - Ask about the experiment, tasks, conditions, and events in the EEG data.
-          - Confirm the sampling frequency or any other specific markers.
+          - Confirm important information, such as the sampling frequency, event markers, electrode placement, etc.
 
        3. **Transfer All Data:**
           - Generate Python code to transfer all channels, events, and metadata into a .fif file.
@@ -63,22 +63,18 @@ export const prompts = {
 
        4. **Confirm Data Units:**
           - Ask the user to confirm the units (e.g., time, voltage) if unclear.
-          - Double-check for missing or unclear data before converting.
 
        5. **Review Schema and Follow-up Questions:**
-          - Analyze the data structure and ask any follow-up questions needed.
           - Address any unclear details to ensure proper conversion into the .fif file.
 
        6. **Generate the .fif File:**
           - Once the data is clarified, generate Python code to consolidate it into a .fif file.
-          - Guide the user through any uncertainties in the data preparation process.
 
        ### User Interaction:
        - Ask Open Questions: Ensure you ask open-ended questions about the user’s dataset and experiment to gather the necessary information.
         Examples:
         - “What is the sampling frequency of the data?”
         - "What is the experiment context?”
-        - “Are there any specific events or markers in the data that we should be aware of?”
         - “Is there any additional metadata that should be included in the .fif file?”
 
        ${fileNamingGuidelines}
@@ -97,7 +93,7 @@ export const prompts = {
           - Inquire if they require filtering, re-referencing, or artifact removal, and what frequency ranges or event triggers are relevant.
           - Ask if there are specific channels or time segments they are concerned about.
 
-       ### 2. Create Epochs:
+       ### 2. Create Epochs (If needed):
           - If the data involves events or specific time windows, guide the user through creating epochs.
           - Ask for details on the events, conditions, and time windows of interest (e.g., pre/post-stimulus intervals).
 
@@ -112,6 +108,7 @@ export const prompts = {
        ### 5. Remove Bad Channels (If needed):
           - Provide a Python MNE code snippet to remove bad channels if necessary.
           - Inquire if the user has identified problematic channels or wants help in detecting them automatically.
+          - Plot the data to help the user identify bad channels if needed.
 
        ### 6. Perform Independent Component Analysis (ICA) (If needed):
           - Provide a Python MNE code snippet to perform ICA if required.
@@ -119,7 +116,6 @@ export const prompts = {
 
        ### 7. Save Preprocessed Data:
           - Once preprocessing is complete, guide the user in saving the cleaned and preprocessed EEG data in an appropriate format (e.g., .fif, .mat).
-          - Provide the Python code to save the data.
 
        ## User Interaction:
        - **Ask Open Questions**: Ensure you ask open-ended questions about the user’s dataset and experiment to gather the necessary information.
