@@ -172,15 +172,18 @@ async function runSystemPython(
   const baseDir = getConversationDir(conversationId)
   const tempFilePath = path.join(baseDir, `${conversationId}.py`)
 
+  log.info(`Writing Python code to ${tempFilePath}`)
+
   await fs.promises.writeFile(tempFilePath, code)
 
   console.log('Running system Python')
   return new Promise((resolve, reject) => {
     exec(`python3 "${tempFilePath}"`, async (error, stdout, stderr) => {
+      log.info(`Python script execution stdout: ${stdout}`)
       await fs.promises.unlink(tempFilePath)
 
       if (error) {
-        console.error('Python script execution error:', error)
+        log.error(`Python script execution error: ${error}`)
         return reject({ stdout, stderr })
       }
 
