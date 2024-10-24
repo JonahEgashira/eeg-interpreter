@@ -260,15 +260,17 @@ export async function startJupyterServer(): Promise<void> {
       return reject(new Error('Failed to start Jupyter server'))
     }
 
+    log.info(`Jupyter server started on port ${JUPYTER_PORT}`)
+
     jupyterProcess.stdout?.on('data', (data) => {
       log.info(`Jupyter stdout: ${data}`)
-      if (data.toString().includes(`http://localhost:${JUPYTER_PORT}/`)) {
-        resolve()
-      }
     })
 
     jupyterProcess.stderr?.on('data', (data) => {
       log.error(`Jupyter stderr: ${data}`)
+      if (data.toString().includes(`http://localhost:${JUPYTER_PORT}/`)) {
+        resolve()
+      }
     })
 
     jupyterProcess.on('close', (code) => {

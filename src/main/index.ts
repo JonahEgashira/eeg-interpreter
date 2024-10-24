@@ -1,6 +1,6 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { electronApp, is } from '@electron-toolkit/utils'
 import { startJupyterServer, stopJupyterServer } from './services/pythonHandler'
 import { setupIpcHandlers } from './services/ipcHandlers'
 import log from 'electron-log'
