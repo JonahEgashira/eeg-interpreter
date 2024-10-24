@@ -1,12 +1,13 @@
-# eeg-interpreter
+# EEG Interpreter
 
-An Electron application with React and TypeScript
+![EEG Interpreter](./resources/EEG.png)
 
-## Recommended IDE Setup
+## Chat to Analyze EEG with the power of LLMs
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+![Demo2](./resources/screenshot2.png)
+![Demo1](./resources/screenshot1.png)
 
-## Project Setup
+## For Development
 
 ### Install
 
