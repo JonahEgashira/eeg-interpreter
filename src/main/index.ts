@@ -11,8 +11,8 @@ let loadingWindow: BrowserWindow | null = null
 
 function createLoadingWindow(): void {
   loadingWindow = new BrowserWindow({
-    width: 200,
-    height: 100,
+    width: 500,
+    height: 400,
     frame: false,
     show: true,
     skipTaskbar: true,
@@ -24,46 +24,11 @@ function createLoadingWindow(): void {
 
   loadingWindow.center()
 
-  // ローディング画面の内容を直接設定
-  loadingWindow.loadURL(`data:text/html;charset=utf-8,
-    <html>
-      <head>
-        <style>
-          body {
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: white;
-            color: #333;
-          }
-          .text {
-            margin-bottom: 10px;
-            font-size: 14px;
-          }
-          .loader {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="text">Initializing...</div>
-        <div class="loader"></div>
-      </body>
-    </html>
-  `)
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    loadingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/loading.html`)
+  } else {
+    loadingWindow.loadFile(join(__dirname, '../renderer/loading.html'))
+  }
 }
 
 function createWindow(): void {
@@ -77,14 +42,18 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
-      webSecurity: false // TODO: fix this
+      webSecurity: false
     }
   })
 
   mainWindow.on('ready-to-show', () => {
-    loadingWindow?.destroy()
-    loadingWindow = null
-    mainWindow?.show()
+    setTimeout(() => {
+      if (loadingWindow) {
+        loadingWindow.destroy()
+        loadingWindow = null
+      }
+      mainWindow?.show()
+    }, 500)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -103,22 +72,18 @@ async function initializeApp(): Promise<void> {
   try {
     electronApp.setAppUserModelId('com.electron')
     setupIpcHandlers()
-
-    // ローディング画面を表示
     createLoadingWindow()
 
-    log.info('Starting Jupyter server...')
+    log.info('Starting Python setup and Jupyter server...')
     await startJupyterServer()
-    log.info('Jupyter server started successfully')
+    log.info('Python setup and Jupyter server completed')
 
     createWindow()
-
-    app.on('browser-window-created', (_, window) => {
-      optimizer.watchWindowShortcuts(window)
-    })
   } catch (error) {
     log.error('Failed to initialize app:', error)
-    loadingWindow?.destroy()
+    if (loadingWindow) {
+      loadingWindow.destroy()
+    }
     app.quit()
   }
 }
