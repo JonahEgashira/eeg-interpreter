@@ -1,83 +1,284 @@
 import { spawn, ChildProcess, exec } from 'child_process'
-import fs from 'fs'
-import path from 'path'
+import * as fs from 'fs'
+import * as path from 'path'
 import { KernelManager, ServerConnection } from '@jupyterlab/services'
 import { app } from 'electron'
 import { handleFigureData } from './figureHandler'
 import { Conversation, ExecutionResult, addExecutionResult } from '@shared/types/chat'
 import * as crypto from 'crypto'
 import { getConversationDir, saveConversation } from './jsonFileHandler'
-import fixPath from 'fix-path'
 import log from 'electron-log'
+import * as https from 'https'
+import * as tar from 'tar'
+import { IncomingMessage } from 'http'
 
 const JUPYTER_TOKEN = crypto.randomBytes(16).toString('hex')
 const JUPYTER_PORT = 8888
 let jupyterProcess: ChildProcess | null = null
 
-fixPath()
-
-const userDataPath = app.getPath('userData')
-process.chdir(userDataPath)
-
-function getJupyterPath(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    exec('which jupyter', (error, stdout, stderr) => {
-      if (error) {
-        log.error(`Error finding jupyter: ${stderr}`)
-        return reject(new Error(`Error finding jupyter: ${stderr}`))
-      }
-      const jupyterPath = stdout.trim()
-      log.info(`Jupyter executable path: ${jupyterPath}`)
-      if (!jupyterPath) {
-        log.error('Jupyter path not found')
-        return reject(new Error('Jupyter path not found'))
-      }
-      resolve(jupyterPath)
-    })
-  })
+interface PythonBuildInfo {
+  url: string
+  platformDir: string
+  executablePath: string
 }
 
-export function startJupyterServer(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    getJupyterPath().then((jupyterPath) => {
-      jupyterProcess = spawn(
-        jupyterPath,
-        [
-          'notebook',
-          '--no-browser',
-          `--port=${JUPYTER_PORT}`,
-          `--IdentityProvider.token=${JUPYTER_TOKEN}`,
-          '--ServerApp.disable_check_xsrf=True'
-        ],
-        {
-          env: { ...process.env, PATH: `${path.dirname(jupyterPath)}:${process.env.PATH}` }
-        }
-      )
+const PYTHON_VERSION = '3.11.10'
+const RELEASE_VERSION = '20241016'
+const BASE_URL = 'https://github.com/indygreg/python-build-standalone/releases/download'
 
-      if (!jupyterProcess) {
-        return reject(new Error('Failed to start Jupyter server'))
+const PYTHON_BUILD_INFO: Record<string, PythonBuildInfo> = {
+  darwin: {
+    url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-aarch64-apple-darwin-install_only.tar.gz`,
+    platformDir: 'python',
+    executablePath: 'bin/python3'
+  },
+  linux: {
+    url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-unknown-linux-gnu-install_only.tar.gz`,
+    platformDir: 'python',
+    executablePath: 'bin/python3'
+  },
+  win32: {
+    url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-pc-windows-msvc-shared-install_only.tar.gz`,
+    platformDir: 'python',
+    executablePath: 'python.exe'
+  }
+}
+class PythonManager {
+  private static instance: PythonManager
+  private pythonPath: string | null = null
+  private pythonDir: string | null = null
+
+  static getInstance(): PythonManager {
+    if (!PythonManager.instance) {
+      PythonManager.instance = new PythonManager()
+    }
+    return PythonManager.instance
+  }
+
+  // Pythonのセットアップを行う
+  async setup(): Promise<void> {
+    const appDir = app.getPath('userData')
+    const buildInfo = PYTHON_BUILD_INFO[process.platform]
+
+    if (!buildInfo) {
+      throw new Error(`Unsupported platform: ${process.platform}`)
+    }
+
+    this.pythonDir = path.join(appDir, buildInfo.platformDir)
+    this.pythonPath = path.join(this.pythonDir, buildInfo.executablePath)
+
+    // Pythonが既にインストールされているか確認
+    if (fs.existsSync(this.pythonPath)) {
+      log.info('Python is already installed')
+      return
+    }
+
+    log.info('Installing Python...', buildInfo)
+    await this.downloadAndExtractPython(buildInfo)
+    await this.installRequirements()
+  }
+
+  // Python実行ファイルのパスを取得
+  getPythonPath(): string {
+    if (!this.pythonPath) {
+      throw new Error('Python is not set up. Call setup() first.')
+    }
+    return this.pythonPath
+  }
+
+  // 環境変数を取得
+  getEnv(): NodeJS.ProcessEnv {
+    if (!this.pythonDir) {
+      throw new Error('Python is not set up. Call setup() first.')
+    }
+
+    const env = { ...process.env }
+    const pathSeparator = process.platform === 'win32' ? ';' : ':'
+    const binDir = path.join(this.pythonDir, 'bin')
+
+    // PATHの設定
+    env.PATH = [binDir, env.PATH].join(pathSeparator)
+
+    // PYTHONHOME, PYTHONPATHの設定
+    env.PYTHONHOME = this.pythonDir
+    env.PYTHONPATH = path.join(this.pythonDir, 'lib', 'python3.11', 'site-packages')
+
+    return env
+  }
+  private async downloadAndExtractPython(buildInfo: PythonBuildInfo): Promise<void> {
+    if (!this.pythonDir) throw new Error('Python directory is not set')
+
+    // 一時ファイルのパスを設定
+    const tempFile = path.join(this.pythonDir, 'python-temp.tar.gz')
+    const tempExtractDir = path.join(this.pythonDir, 'temp-extract')
+
+    try {
+      // ディレクトリの作成
+      await fs.promises.mkdir(this.pythonDir, { recursive: true })
+      await fs.promises.mkdir(tempExtractDir, { recursive: true })
+
+      // ダウンロード処理
+      await new Promise<void>((resolve, reject) => {
+        const fileStream = fs.createWriteStream(tempFile)
+
+        const handleResponse = (response: IncomingMessage) => {
+          if (response.statusCode !== 200) {
+            fileStream.close()
+            reject(new Error(`Failed to download: ${response.statusCode}`))
+            return
+          }
+
+          response.pipe(fileStream)
+
+          fileStream.on('error', (err) => {
+            fileStream.close()
+            reject(err)
+          })
+
+          fileStream.on('finish', () => {
+            fileStream.close()
+            log.info('Download completed successfully')
+            resolve()
+          })
+        }
+
+        const request = https.get(buildInfo.url, (response) => {
+          if (response.statusCode === 302 && response.headers.location) {
+            https.get(response.headers.location, handleResponse).on('error', (err) => {
+              fileStream.close()
+              reject(err)
+            })
+          } else {
+            handleResponse(response)
+          }
+        })
+
+        request.on('error', (err) => {
+          fileStream.close()
+          reject(err)
+        })
+      })
+
+      // まず一時ディレクトリに解凍
+      log.info('Starting extraction to temp directory...')
+      await tar.x({
+        file: tempFile,
+        cwd: tempExtractDir
+      })
+
+      // 一時ディレクトリの内容を確認
+      const extractedContents = await fs.promises.readdir(tempExtractDir)
+      log.info('Extracted contents:', extractedContents)
+
+      // pythonディレクトリの中身を本来のディレクトリに移動
+      const pythonSourceDir = path.join(tempExtractDir, 'python')
+      if (fs.existsSync(pythonSourceDir)) {
+        log.info('Moving contents from temp directory to final location...')
+        const contents = await fs.promises.readdir(pythonSourceDir)
+        for (const item of contents) {
+          const sourcePath = path.join(pythonSourceDir, item)
+          const targetPath = path.join(this.pythonDir, item)
+          await fs.promises.rename(sourcePath, targetPath)
+        }
+      } else {
+        throw new Error('Expected python directory not found in extracted contents')
       }
 
-      jupyterProcess.stdout?.on('data', (data) => {
-        console.log(`Jupyter stdout: ${data}`)
-        if (data.toString().includes(`http://localhost:${JUPYTER_PORT}/`)) {
-          resolve()
+      log.info('Cleaning up...')
+      // 一時ファイルとディレクトリの削除
+      await fs.promises.rm(tempFile)
+      await fs.promises.rm(tempExtractDir, { recursive: true })
+
+      log.info('Installation completed successfully')
+    } catch (error) {
+      log.error('Error during download or extraction:', error)
+      // エラー時のクリーンアップ
+      try {
+        if (fs.existsSync(tempFile)) {
+          await fs.promises.unlink(tempFile)
         }
-      })
+        if (fs.existsSync(tempExtractDir)) {
+          await fs.promises.rm(tempExtractDir, { recursive: true })
+        }
+      } catch (cleanupError) {
+        log.error('Error during cleanup:', cleanupError)
+      }
+      throw error
+    }
+  }
 
-      jupyterProcess.stderr?.on('data', (data) => {
-        console.error(`Jupyter stderr: ${data}`)
-      })
+  private async installRequirements(): Promise<void> {
+    const requirements = ['jupyter', 'numpy', 'pandas', 'matplotlib', 'mne']
+    const pythonPath = this.getPythonPath()
 
-      jupyterProcess.on('close', (code) => {
-        console.log(`Jupyter server exited with code ${code}`)
-        jupyterProcess = null
-      })
+    log.info('Installing required packages...')
 
-      jupyterProcess.on('error', (err) => {
-        console.error('Failed to start Jupyter server:', err)
-        reject(err)
+    // ensurepipを使用してpipをインストール
+    await new Promise<void>((resolve, reject) => {
+      exec(`"${pythonPath}" -m ensurepip --upgrade`, { env: this.getEnv() }, (error) => {
+        if (error) reject(error)
+        else resolve()
       })
+    })
+
+    // 必要なパッケージのインストール
+    for (const pkg of requirements) {
+      log.info(`Installing ${pkg}...`)
+      await new Promise<void>((resolve, reject) => {
+        exec(`"${pythonPath}" -m pip install ${pkg}`, { env: this.getEnv() }, (error) => {
+          if (error) reject(error)
+          else resolve()
+        })
+      })
+    }
+
+    log.info('All required packages installed successfully')
+  }
+}
+
+export async function startJupyterServer(): Promise<void> {
+  const pythonManager = PythonManager.getInstance()
+  await pythonManager.setup()
+
+  const pythonDir = path.dirname(pythonManager.getPythonPath())
+  const jupyterPath = path.join(pythonDir, 'jupyter')
+
+  return new Promise((resolve, reject) => {
+    jupyterProcess = spawn(
+      jupyterPath,
+      [
+        'notebook',
+        '--no-browser',
+        `--port=${JUPYTER_PORT}`,
+        `--IdentityProvider.token=${JUPYTER_TOKEN}`,
+        '--ServerApp.disable_check_xsrf=True'
+      ],
+      { env: pythonManager.getEnv() }
+    )
+
+    if (!jupyterProcess) {
+      return reject(new Error('Failed to start Jupyter server'))
+    }
+
+    jupyterProcess.stdout?.on('data', (data) => {
+      log.info(`Jupyter stdout: ${data}`)
+      if (data.toString().includes(`http://localhost:${JUPYTER_PORT}/`)) {
+        resolve()
+      }
+    })
+
+    jupyterProcess.stderr?.on('data', (data) => {
+      log.error(`Jupyter stderr: ${data}`)
+    })
+
+    jupyterProcess.on('close', (code) => {
+      log.info(`Jupyter server exited with code ${code}`)
+      jupyterProcess = null
+    })
+
+    jupyterProcess.on('error', (err) => {
+      log.error('Failed to start Jupyter server:', err)
+      reject(err)
     })
   })
 }
@@ -165,30 +366,34 @@ export async function runPythonCode(
   })
 }
 
+// Python実行関数を修正
 async function runSystemPython(
   code: string,
   conversationId: string
 ): Promise<{ stdout: string; stderr: string }> {
+  const pythonManager = PythonManager.getInstance()
   const baseDir = getConversationDir(conversationId)
   const tempFilePath = path.join(baseDir, `${conversationId}.py`)
 
   log.info(`Writing Python code to ${tempFilePath}`)
-
   await fs.promises.writeFile(tempFilePath, code)
 
-  console.log('Running system Python')
   return new Promise((resolve, reject) => {
-    exec(`python3 "${tempFilePath}"`, async (error, stdout, stderr) => {
-      log.info(`Python script execution stdout: ${stdout}`)
-      await fs.promises.unlink(tempFilePath)
+    exec(
+      `"${pythonManager.getPythonPath()}" "${tempFilePath}"`,
+      { env: pythonManager.getEnv() },
+      async (error, stdout, stderr) => {
+        log.info(`Python script execution stdout: ${stdout}`)
+        await fs.promises.unlink(tempFilePath)
 
-      if (error) {
-        log.error(`Python script execution error: ${error}`)
-        return reject({ stdout, stderr })
+        if (error) {
+          log.error(`Python script execution error: ${error}`)
+          return reject({ stdout, stderr })
+        }
+
+        resolve({ stdout, stderr })
       }
-
-      resolve({ stdout, stderr })
-    })
+    )
   })
 }
 
