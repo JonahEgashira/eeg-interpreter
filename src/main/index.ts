@@ -73,22 +73,17 @@ async function initializeApp(): Promise<void> {
     setupIpcHandlers()
     createLoadingWindow()
 
-    const sendProgress = (step: string, status: string) => {
-      loadingWindow?.webContents.send('setup-progress', { step, status })
-    }
-
-    sendProgress('python', 'loading')
     const pythonManager = PythonManager.getInstance()
     await pythonManager.setup()
-    sendProgress('python', 'completed')
+    log.info('Python setup completed')
 
-    sendProgress('packages', 'loading')
+    log.info('Installing required packages...')
     await pythonManager.installRequirements()
-    sendProgress('packages', 'completed')
+    log.info('Required packages installed')
 
-    sendProgress('jupyter', 'loading')
+    log.info('Starting Jupyter server...')
     await startJupyterServer()
-    sendProgress('jupyter', 'completed')
+    log.info('Jupyter server started')
 
     createWindow()
   } catch (error) {

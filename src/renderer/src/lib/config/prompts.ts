@@ -56,6 +56,7 @@ export const prompts = {
        2. **Clarify Experiment Context:**
           - Ask about the experiment, tasks, conditions, and events in the EEG data.
           - Confirm important information, such as the sampling frequency, event markers, electrode placement, etc.
+          - Pay particular attention to electrode placement, checking the electrode system used (e.g., 10-20 system)
 
        3. **Transfer All Data:**
           - Generate Python code to transfer all channels, events, and metadata into a .fif file.
