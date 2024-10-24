@@ -43,7 +43,8 @@ const PYTHON_BUILD_INFO: Record<string, PythonBuildInfo> = {
     executablePath: 'python.exe'
   }
 }
-class PythonManager {
+
+export class PythonManager {
   private static instance: PythonManager
   private pythonPath: string | null = null
   private pythonDir: string | null = null
@@ -75,7 +76,6 @@ class PythonManager {
 
     log.info('Installing Python...', buildInfo)
     await this.downloadAndExtractPython(buildInfo)
-    await this.installRequirements()
   }
 
   // Python実行ファイルのパスを取得
@@ -207,7 +207,7 @@ class PythonManager {
     }
   }
 
-  private async installRequirements(): Promise<void> {
+  async installRequirements(): Promise<void> {
     const requirements = ['jupyter', 'numpy', 'pandas', 'matplotlib', 'mne']
     const pythonPath = this.getPythonPath()
 

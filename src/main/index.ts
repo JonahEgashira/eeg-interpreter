@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, is } from '@electron-toolkit/utils'
-import { startJupyterServer, stopJupyterServer } from './services/pythonHandler'
+import { PythonManager, startJupyterServer, stopJupyterServer } from './services/pythonHandler'
 import { setupIpcHandlers } from './services/ipcHandlers'
 import log from 'electron-log'
 import icon from '../../resources/icon.png?asset'
@@ -30,7 +30,6 @@ function createLoadingWindow(): void {
     loadingWindow.loadFile(join(__dirname, '../renderer/loading.html'))
   }
 }
-
 function createWindow(): void {
   console.log('Creating main window...')
   mainWindow = new BrowserWindow({
@@ -74,17 +73,31 @@ async function initializeApp(): Promise<void> {
     setupIpcHandlers()
     createLoadingWindow()
 
-    log.info('Starting Python setup and Jupyter server...')
+    const sendProgress = (step: string, status: string) => {
+      loadingWindow?.webContents.send('setup-progress', { step, status })
+    }
+
+    sendProgress('python', 'loading')
+    const pythonManager = PythonManager.getInstance()
+    await pythonManager.setup()
+    sendProgress('python', 'completed')
+
+    sendProgress('packages', 'loading')
+    await pythonManager.installRequirements()
+    sendProgress('packages', 'completed')
+
+    sendProgress('jupyter', 'loading')
     await startJupyterServer()
-    log.info('Python setup and Jupyter server completed')
+    sendProgress('jupyter', 'completed')
 
     createWindow()
   } catch (error) {
     log.error('Failed to initialize app:', error)
-    if (loadingWindow) {
-      loadingWindow.destroy()
-    }
-    app.quit()
+    loadingWindow?.webContents.send('setup-error', { error: error })
+    setTimeout(() => {
+      loadingWindow?.destroy()
+      app.quit()
+    }, 3000)
   }
 }
 
