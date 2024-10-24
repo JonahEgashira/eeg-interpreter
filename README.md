@@ -2,7 +2,7 @@
 
 ![EEG Interpreter](./resources/EEG.png)
 
-## Chat to Analyze EEG with the power of LLMs
+## Just Chat to Analyze EEG with the power of LLMs
 
 ![Demo2](./resources/screenshot2.png)
 ![Demo1](./resources/screenshot1.png)
