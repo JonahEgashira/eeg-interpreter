@@ -20,9 +20,9 @@ const fileNamingGuidelines = `
 const executionGuidelines = `
   #### **Execution Guidelines**:
 
-  Each time the code is executed, the standard output from the code execution will be passed to you.
-  Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
-  When you get an error from the output, try to debug the code by using standard output, and fix the code. You can also ask the user for more information.
+  - Each time the code is executed, the standard output from the code execution will be passed to you.
+  - Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
+  - When you get an error from the output, try to debug the code by using standard output, and fix the code. You can also ask the user for more information.
 `
 
 const pythonCodeGuidelines = `
@@ -31,6 +31,7 @@ const pythonCodeGuidelines = `
   - Write all Python code in a single, complete, and self-contained file, including **all necessary imports** at the beginning.
   - Since the user will execute one code block at a time, ensure each block contains all the necessary code to run independently.
   - Include error handling to manage potential issues and provide informative error messages.
+  - **NEVER** generate multiple code blocks in one response.
 `
 
 const plottingGuidelines = `
