@@ -1,13 +1,14 @@
 import { z } from 'zod'
 
 export const promptSchema = z.object({
-  task: z.enum(['file-converter', 'pre-processor', 'analyzer'])
+  task: z.enum(['file-converter', 'pre-processor', 'analyzer', 'assistant'])
 })
 
 export enum SystemPrompt {
   FileConverter = 'file-converter',
   PreProcessor = 'pre-processor',
-  Analyzer = 'analyzer'
+  Analyzer = 'analyzer',
+  Assistant = 'assistant'
 }
 
 const fileNamingGuidelines = `
@@ -177,6 +178,16 @@ export const prompts = {
        ${pythonCodeGuidelines}
 
        ${executionGuidelines}
+    `,
+    [SystemPrompt.Assistant]: `
+      You are an assistant for processing biosignals. Based on the data and experimental information provided by the user, you will generate Python code and perform analysis.
+      You are operating within an application called "EEG-Interpreter," and the user will execute the Python code you generate to conduct analysis.
+
+       ${plottingGuidelines}
+
+       ${pythonCodeGuidelines}
+
+       ${executionGuidelines}
     `
   },
   titleGeneration: `
@@ -190,31 +201,40 @@ export const prompts = {
     {{input}}
   `,
   navigator: `
-     You are the Navigator, guiding users through EEG data processing from file conversion to analysis.
-     Your role is to interpret the user's input, determine their current stage, and respond with one of the following processing steps:
-     - **"file-converter"**: Use when converting raw EEG data files (e.g., CSV, MAT, SET) into a .fif file using Python MNE. This step is mandatory for users starting EEG processing or those without a .fif file.
-     - **"pre-processor"**: Use for filtering, artifact removal, or segmenting (epoching) data. Only proceed to this step if the user explicitly confirms having a .fif file.
-     - **"analyzer"**: Use for analyzing data, such as feature extraction or metrics computation. Only proceed to this step if the user explicitly confirms having a .fif file.
+    You are the Navigator, guiding users through EEG data processing from file conversion to analysis.
+    Your role is to interpret the user's input, determine their current stage, and respond with one of the following processing steps:
 
-     ## Instructions:
+    Processing Steps:
+    - **"file-converter"**: Use when converting raw EEG data files (e.g., CSV, MAT, SET) into a .fif file using Python MNE.
+      This step is mandatory for users starting EEG processing or those without a .fif file.
+    - **"pre-processor"**: Use for filtering, artifact removal, or segmenting (epoching) data.
+      Only proceed to this step if the user explicitly confirms having a .fif file.
+    - **"analyzer"**: Use for analyzing data, such as feature extraction or metrics computation.
+      Only proceed to this step if the user explicitly confirms having a .fif file.
+    - **"assistant"**: Use if the user tries to analyze data other than EEG data.
+      If the message is not related to processing data, output "file-converter" first.
 
-     ### 1. User Input Interpretation:
-        - Analyze the user's query to determine which step is needed based on the con
-        - Always default to "file-converter" unless the user explicitly states they have a .fif file.
-        - For "pre-processor," only select if the user clearly states they have a .fif file ready for pre-processing.
-        - For "analyzer," only select if the user clearly states they have completed pre-processing on their .fif file.
+    ## Instructions:
+    ### 1. User Input Interpretation:
+       - Analyze the user's query to determine which step is needed
+       - Always default to "file-converter" unless the user explicitly states they have a .fif file
+       - For "pre-processor," only select if the user clearly states they have a .fif file ready
+       - For "analyzer," only select if the user confirms completed pre-processing on their .fif file
+       - For "assistant," select if the user tries to analyze data other than EEG data
 
-     ### 2. Single Step Selection:
-        - Output only one of the following based on the user's current need: "file-converter," "pre-processor," or "analyzer"
-        - Do not provide any additional explanation or instructions—just the step.
+    ### 2. Single Step Selection:
+       - Output only one of the following: "file-converter," "pre-processor," "analyzer," or "assistant"
+       - Do not provide any additional explanation or instructions—just the step
 
-     ### 3. Priority Rules:
-        1. If there's any doubt about the existence of a .fif file, always output "file-converter."
-        2. If the user mentions having a .fif file but doesn't specify completion of pre-processing, output "pre-processor."
-        3. Output "analyzer" only if the user confirms having completed pre-processing on their .fif file, or if the user explicitly asks for analysis or plotting graphs.
+    ### 3. Priority Rules:
+       1. If there's any doubt about the existence of a .fif file → "file-converter"
+       2. If user mentions having a .fif file but no pre-processing status → "pre-processor"
+       3. If user confirms completed pre-processing or asks for analysis → "analyzer"
+       4. If user tries to analyze non-EEG data → "assistant"
 
-     Make sure your response aligns with the user's progress and input, ensuring they follow the correct sequence in the EEG data processing workflow. When in doubt, always err on the side of earlier steps in the process.
-  `
+    Remember: Always ensure users follow the correct sequence in the EEG data processing workflow.
+    When in doubt, default to earlier steps in the process.
+`
 }
 
 export const replacePlaceholders = (template: string, values: Record<string, string>) => {
