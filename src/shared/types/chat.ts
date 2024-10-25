@@ -1,4 +1,4 @@
-import { SystemPrompt } from '@renderer/lib/config/prompts'
+import { SystemPrompt } from '../../renderer/src/lib/config/prompts'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface ExecutionResult {
