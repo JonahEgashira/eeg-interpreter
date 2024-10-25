@@ -296,9 +296,12 @@ const App = (): JSX.Element => {
         content: userInput
       })
 
-      const titlePromise = currentConversation === null ? generateTitle(userInput) : null
-      setCurrentConversation(updatedConversation)
+      if (currentConversation === null) {
+        const title = await generateTitle(userInput)
+        updatedConversation.title = title
+      }
 
+      setCurrentConversation(updatedConversation)
       setInput('')
 
       const newSystemPrompt = autoAssistantEnabled
@@ -309,12 +312,6 @@ const App = (): JSX.Element => {
       setIsStreaming(true)
       const aiMessage = await streamAIResponse(updatedConversation, newSystemPrompt)
       setIsStreaming(false)
-
-      if (titlePromise) {
-        titlePromise.then((title) => {
-          updatedConversation.title = title
-        })
-      }
 
       updatedConversation = updateConversation(updatedConversation, aiMessage)
 
