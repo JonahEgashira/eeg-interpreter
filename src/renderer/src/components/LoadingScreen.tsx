@@ -17,7 +17,7 @@ const LoadingScreen = () => {
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md text-center space-y-6">
-        <h1 className="text-3xl text-gray-900">Initializing Application</h1>
+        <h1 className="text-3xl text-gray-900">Starting Application</h1>
 
         <div className="flex items-center justify-center">
           <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />

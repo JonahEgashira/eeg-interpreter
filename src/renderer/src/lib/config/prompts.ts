@@ -21,8 +21,9 @@ const executionGuidelines = `
   #### **Execution Guidelines**:
 
   - Each time the code is executed, the standard output from the code execution will be passed to you.
+  - **DO NOT** generate code and ask questions at the same time. When you ask questions, you must wait for the user's execution result output before proceeding.
   - Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
-  - When you get an error from the output, try to debug the code by using standard output, and fix the code. You can also ask the user for more information.
+  - When you get an error from the output, try to debug the code by using standard output, and fix the code.
 `
 
 const pythonCodeGuidelines = `

@@ -208,7 +208,7 @@ export class PythonManager {
   }
 
   async installRequirements(): Promise<void> {
-    const requirements = ['jupyter', 'numpy', 'pandas', 'matplotlib', 'mne']
+    const requirements = ['jupyter', 'numpy', 'pandas', 'matplotlib', 'mne', 'autoreject']
     const pythonPath = this.getPythonPath()
 
     log.info('Installing required packages...')
