@@ -16,12 +16,11 @@
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win-arm": "npm run build && electron-builder --win --arm",
-    "build:win-x64": "npm run build && electron-builder --win --x64",
-    "build:win": "npm run build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac",
-    "build:mac-x64": "electron-vite build && electron-builder --mac --x64",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:win-arm": "npm run build && electron-builder --win --arm --config.directories.output=dist/win-arm",
+    "build:win-x64": "npm run build && electron-builder --win --x64 --config.directories.output=dist/win-x64",
+    "build:mac": "electron-vite build && electron-builder --mac --universal --config.directories.output=dist/mac",
+    "build:linux-arm": "electron-vite build && electron-builder --linux --arm64 --config.directories.output=dist/linux-arm64",
+    "build:linux-x64": "electron-vite build && electron-builder --linux --x64 --config.directories.output=dist/linux-x64"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.50",
