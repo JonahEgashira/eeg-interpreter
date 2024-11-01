@@ -212,7 +212,7 @@ const App = (): JSX.Element => {
         case 'analyzer':
           return SystemPrompt.Analyzer
         default:
-          return SystemPrompt.Assistant
+          return SystemPrompt.ContextExtractor
       }
     } else {
       console.error('Error parsing result:', parsedResult.error)
