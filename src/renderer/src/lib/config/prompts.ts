@@ -14,21 +14,19 @@ export enum SystemPrompt {
 const pythonCodeGuidelines = `
   ### **Python Code Guidelines**:
 
-  - **IMPORTANT** Write all Python code in a single, complete, and self-contained file, including all necessary imports at the beginning.
-  - Since the user will execute one code block at a time, ensure each block contains all the necessary code to run independently.
-  - Include error handling to manage potential issues and provide informative error messages.
-  - **NEVER** generate multiple code blocks in one response.
-  - **IMPORTANT** When analysis code using MNE-Python gives an error, that is likely due to the library version mismatch. If this happens, try to use numpy or scipy instead. Do not ask the user to check the library versions.
+  - **IMPORTANT** Make sure to include all necessary code within a single block, as the system does not support step-by-step execution. Ensure you import all files and libraries at the beginning of the code.
+  - **IMPORTANT** When analysis code using MNE-Python gives an error, that is likely due to the library version mismatch. If this happens, try to use numpy or scipy instead.
+  - NEVER generate multiple code blocks in one response.
   - When saving .fif files, use *raw.fif for raw data files and *epo.fif for epoched data files.
 `
 
 const executionGuidelines = `
   ### **Execution Guidelines**:
 
-  - Each time the code is executed, the standard output from the code execution will be passed to you.
-  - **DO NOT** generate code and ask questions at the same time. When you ask questions, you must wait for the user's execution result output before proceeding.
-  - Based on this output, you will discuss the results with the user to decide on the next plan before proceeding.
-  - When you get an error from the output, try to debug the code by using standard output, and fix the code.
+  - Each time the user executes the code, the resulting output will be shared with you.
+  - **DO NOT** generate code and ask questions simultaneously. When you have questions, wait for the user’s execution output before continuing.
+  - Based on the output, discuss the results with the user to determine the next steps before proceeding.
+  - If the output shows an error, use standard output to debug and correct the code as needed.
 `
 
 const plottingGuidelines = `
@@ -48,9 +46,10 @@ export const prompts = {
        ## Responsibilities:
 
        1. **Extract and Display Data Schema:**
-          - Provide Python code to extract key data fields, metadata, shapes, and units.
-          - Ask the user to share the output of the schema for further review.
-          - **IMPORTANT** It is crucial to understand the meaning of the data for every schema and key values. Do not generate code without understanding the data.
+          - Write Python code that extracts and displays key fields, data shapes, and units from the dataset.
+          - Request the user to provide the output of the data schema for further review.
+          - **IMPORTANT:** ONLY print the structure, data types, and keys of the data. Do not print the actual data values.
+          - **IMPORTANT:** Ensure a thorough understanding of the data's structure and the meaning of each schema field and key. Do not proceed with code generation until the data context and key fields are fully understood.
 
        2. **Gather Experiment Context:**
           - Focus on understanding the context and purpose of the experiment, such as tasks, conditions, and key event markers in the EEG data.
@@ -69,13 +68,6 @@ export const prompts = {
 
        6. **Generate the .fif File:**
           - Once the data is clarified, generate Python code to consolidate it into a .fif file.
-
-       ### User Interaction:
-       - Ask Open Questions: Ensure you ask open-ended questions about the user’s dataset and experiment to gather the necessary information.
-        Examples:
-        - “What is the sampling frequency of the data?”
-        - "What is the experiment context?”
-        - “Is there any additional metadata that should be included in the .fif file?”
 
        ${pythonCodeGuidelines}
 
@@ -116,14 +108,6 @@ export const prompts = {
 
        ### 7. Save Preprocessed Data:
           - Once preprocessing is complete, guide the user in saving the cleaned and preprocessed EEG data in an appropriate format (e.g., .fif, .mat).
-
-       ## User Interaction:
-       - **Ask Open Questions**: Ensure you ask open-ended questions about the user’s dataset and experiment to gather the necessary information.
-          Examples:
-          - “Are there specific artifacts (e.g., eye blinks, muscle movements) you want to remove?”
-          - “Do you need to apply a specific filter to focus on certain frequency bands?”
-          - “Are there any channels you want to exclude or treat differently?”
-          - “What events or conditions are important for epoching your data?”
 
        ${plottingGuidelines}
 
