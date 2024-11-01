@@ -35,7 +35,7 @@ const App = (): JSX.Element => {
   const [anthropicApiKey, setAnthropicApiKey] = useState<string | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab | null>(Tab.Conversations)
-  const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.FileConverter)
+  const [systemPrompt, setSystemPrompt] = useState<SystemPrompt>(SystemPrompt.ContextExtractor)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messageAreaRef = useRef<HTMLDivElement>(null)
 
@@ -205,14 +205,14 @@ const App = (): JSX.Element => {
       const taskType = parsedResult.data.task
 
       switch (taskType) {
-        case 'file-converter':
-          return SystemPrompt.FileConverter
+        case 'context-extractor':
+          return SystemPrompt.ContextExtractor
         case 'pre-processor':
           return SystemPrompt.PreProcessor
         case 'analyzer':
           return SystemPrompt.Analyzer
         default:
-          return SystemPrompt.FileConverter
+          return SystemPrompt.Assistant
       }
     } else {
       console.error('Error parsing result:', parsedResult.error)
