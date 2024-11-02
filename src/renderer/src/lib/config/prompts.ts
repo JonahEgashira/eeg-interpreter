@@ -17,6 +17,7 @@ const pythonCodeGuidelines = `
   - **IMPORTANT** When analysis code using MNE-Python gives an error, that is likely due to the library version mismatch. If this happens, try to use numpy or scipy instead.
   - NEVER generate multiple code blocks in one response.
   - When saving .fif files, use *raw.fif for raw data files and *epo.fif for epoched data files.
+  - When using scipy, import both scipy and numpy at the same time.
 `
 
 const executionGuidelines = `
