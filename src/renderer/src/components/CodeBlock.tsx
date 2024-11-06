@@ -1,6 +1,6 @@
-import React, { useMemo, memo, useEffect } from 'react'
+import React, { useMemo, memo, useEffect, useState } from 'react'
 import { runPythonCode } from '@renderer/lib/ipcFunctions'
-import { Play } from 'lucide-react'
+import { Play, Copy, Check } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Conversation, Message } from '@shared/types/chat'
@@ -44,6 +44,8 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
     handleBase64Update,
     isLastMessage
   }) => {
+    const [isCopied, setIsCopied] = useState(false)
+
     const executionResult = useMemo(() => {
       return conversation?.messages.find((m) => m.id === message.id && m.executionResult)
         ?.executionResult
@@ -67,6 +69,12 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
         const result: ExecutionResult = { code }
         handleExecutionResult(message.id, result, isLastMessage, message.systemPrompt)
       }
+    }
+
+    const handleCopy = () => {
+      navigator.clipboard.writeText(code)
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000) // Reset after 2 seconds
     }
 
     useEffect(() => {
@@ -95,15 +103,28 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
 
     return (
       <div>
-        {language === 'python' && (
+        {language === 'python' ? (
           <div className="flex justify-between items-center mb-2 mt-6">
             <span className="text-sm font-bold">Python</span>
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopy}
+                className={`flex items-center px-2 py-1 hover:bg-gray-400 bg-gray-500 text-white text-xs rounded transition-colors duration-200`}
+                title="Copy code"
+              >
+                {isCopied ? (
+                  <Check size={16} className="mr-1" />
+                ) : (
+                  <Copy size={16} className="mr-1" />
+                )}
+                <span>Copy</span>
+              </button>
               <button
                 onClick={handleRun}
-                className="px-2 py-1 hover:bg-gray-400 bg-gray-500 text-white text-xs rounded"
+                className={`flex items-center px-2 py-1 hover:bg-gray-400 bg-gray-500 text-white text-xs rounded transition-colors duration-200`}
               >
-                <Play size={16} />
+                <Play size={16} className="mr-1" />
+                <span>Run</span>
               </button>
               {isLastMessage && (
                 <p className="text-xs text-gray-500 ml-2">
@@ -111,6 +132,22 @@ const CodeBlock: React.FC<CodeBlockProps> = memo(
                 </p>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="flex justify-between items-center mb-2 mt-6">
+            <span className="text-sm font-bold">{language}</span>
+            <button
+              onClick={handleCopy}
+              className={`flex items-center px-2 py-1 hover:bg-gray-400 bg-gray-500 text-white text-xs rounded transition-colors duration-200`}
+              title="Copy code"
+            >
+              {isCopied ? (
+                <Check size={16} className="mr-1" />
+              ) : (
+                <Copy size={16} className="mr-1" />
+              )}
+              <span>Copied</span>
+            </button>
           </div>
         )}
         <SyntaxHighlighter PreTag="div" style={oneLight} language={language}>
