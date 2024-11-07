@@ -93,6 +93,7 @@ export const prompts = {
           - Generate the code to convert the data to .fif format.
 
         ${pythonCodeGuidelines}
+
         ${executionGuidelines}
      `,
     [SystemPrompt.PreProcessor]: `
@@ -136,7 +137,9 @@ export const prompts = {
           - Once preprocessing is complete, save the cleaned and preprocessed EEG data.
 
        ${plottingGuidelines}
+
        ${pythonCodeGuidelines}
+
        ${executionGuidelines}
     `,
     [SystemPrompt.Analyzer]: `
@@ -168,7 +171,9 @@ export const prompts = {
          - Provide Python code to save analysis results.
 
        ${pythonCodeGuidelines}
+
        ${executionGuidelines}
+
        ${plottingGuidelines}
     `
   },
