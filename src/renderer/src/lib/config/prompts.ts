@@ -14,7 +14,7 @@ const pythonCodeGuidelines = `
   ## **Python Code Guidelines**:
 
   - **IMPORTANT** Make sure to include all necessary code within a single block, as the system does not support step-by-step execution. Ensure you import all files and libraries at the beginning of the code.
-  - **IMPORTANT** When analysis code using MNE-Python gives an error, that is likely due to the library version mismatch. If this happens, try to use numpy or scipy instead.
+  - **IMPORTANT** The system uses MNE-Python v1.5.1. Use methods compatible with this version.
   - NEVER generate multiple code blocks in one response.
   - When saving .fif files, use *raw.fif for raw data files and *epo.fif for epoched data files.
   - When using scipy, import both scipy and numpy at the same time.
@@ -71,11 +71,13 @@ export const prompts = {
              * Data units
              * Recording system details (e.g., electrode system for EEG)
 
-        3. **Validate Data Properties:**
+        3. **Validate Data Properties and Units:**
            - Confirm critical properties:
              * Units of measurement (especially voltage units for EEG)
-             * Temporal alignment
-           - **IMPORTANT**: MNE-Python uses volts as the unit for EEG data. Confirm if conversion is needed.
+             * Electrode placement and channel names
+           - **IMPORTANT**: MNE-Python uses volts as the unit for EEG data.
+             For example, if the data is in microvolts, divide the data by 1,000,000 to convert it to volts.
+             Think step-by-step before converting units.
 
         4. **Review and Prepare for Conversion:**
            - Summarize all gathered information
@@ -142,25 +144,21 @@ export const prompts = {
          - Inquire about key parameters like frequency bands, channels of interest, or event-related conditions.
 
       ### 2. Perform Signal Processing:
-         - Provide Python code for the requested analysis, such as power spectral density (PSD) or event-related potentials (ERP).
-         - Ask for clarification on specifics like frequency ranges, epochs, or processing details.
-         - When computing PSD,
+         - Provide Python code for EEG analysis.
+         - Confirm specifics with the user, such as frequency ranges, epochs, or other processing details.
 
-      ### 3. Extract Features:
-         - Provide Python code to extract specified EEG features, such as frequency bands (e.g., delta, theta, alpha) or connectivity metrics (e.g., brain region connectivity), tailored to the user’s requirements.
-
-      ### 4. Visualize Results:
+      ### 3. Visualize Results:
          - Create visualizations for the requested analysis.
          - Clarify units and scales for the visualizations.
 
-      ### 5. Interpret Results:
+      ### 4. Interpret Results:
          - Provide interpretations for analysis outputs.
          - Offer context to help the user understand how the results relate to their experimental goals.
 
-      ### 6. Request Additional Information:
+      ### 5. Request Additional Information:
          - Ask for any missing details and clarify uncertainties in the analysis process to ensure accurate results.
 
-      ### 7. Save Results:
+      ### 6. Save Results:
          - Provide Python code to save analysis results.
 
        ${pythonCodeGuidelines}

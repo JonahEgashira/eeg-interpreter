@@ -230,7 +230,7 @@ const App = (): JSX.Element => {
       model: llm(llmModel),
       system: prompts.system[prompt],
       messages: createMessagesForLLM(conversation),
-      temperature: 0.1
+      temperature: 0
     })
 
     let fullResponse = ''

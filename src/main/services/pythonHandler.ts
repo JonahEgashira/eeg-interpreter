@@ -26,21 +26,36 @@ const PYTHON_VERSION = '3.11.10'
 const RELEASE_VERSION = '20241016'
 const BASE_URL = 'https://github.com/indygreg/python-build-standalone/releases/download'
 
-const PYTHON_BUILD_INFO: Record<string, PythonBuildInfo> = {
+interface PlatformBuildInfo {
+  [arch: string]: PythonBuildInfo
+}
+
+const PYTHON_BUILD_INFO: Record<string, PlatformBuildInfo> = {
   darwin: {
-    url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-aarch64-apple-darwin-install_only.tar.gz`,
-    platformDir: 'python',
-    executablePath: 'bin/python3'
+    arm64: {
+      url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-aarch64-apple-darwin-install_only.tar.gz`,
+      platformDir: 'python',
+      executablePath: 'bin/python3'
+    },
+    x64: {
+      url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-apple-darwin-install_only.tar.gz`,
+      platformDir: 'python',
+      executablePath: 'bin/python3'
+    }
   },
   linux: {
-    url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-unknown-linux-gnu-install_only.tar.gz`,
-    platformDir: 'python',
-    executablePath: 'bin/python3'
+    x64: {
+      url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-unknown-linux-gnu-install_only.tar.gz`,
+      platformDir: 'python',
+      executablePath: 'bin/python3'
+    }
   },
   win32: {
-    url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-pc-windows-msvc-shared-install_only.tar.gz`,
-    platformDir: 'python',
-    executablePath: 'python.exe'
+    x64: {
+      url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-pc-windows-msvc-shared-install_only.tar.gz`,
+      platformDir: 'python',
+      executablePath: 'python.exe'
+    }
   }
 }
 
@@ -59,14 +74,20 @@ export class PythonManager {
   // Pythonのセットアップを行う
   async setup(): Promise<void> {
     const appDir = app.getPath('userData')
-    const buildInfo = PYTHON_BUILD_INFO[process.platform]
+    const platformBuildInfo = PYTHON_BUILD_INFO[process.platform]
 
-    if (!buildInfo) {
+    if (!platformBuildInfo) {
       throw new Error(`Unsupported platform: ${process.platform}`)
     }
 
-    this.pythonDir = path.join(appDir, buildInfo.platformDir)
-    this.pythonPath = path.join(this.pythonDir, buildInfo.executablePath)
+    const archBuildInfo = platformBuildInfo[process.arch]
+
+    if (!archBuildInfo) {
+      throw new Error(`Unsupported architecture: ${process.arch} for platform: ${process.platform}`)
+    }
+
+    this.pythonDir = path.join(appDir, archBuildInfo.platformDir)
+    this.pythonPath = path.join(this.pythonDir, archBuildInfo.executablePath)
 
     // Pythonが既にインストールされているか確認
     if (fs.existsSync(this.pythonPath)) {
@@ -74,8 +95,8 @@ export class PythonManager {
       return
     }
 
-    log.info('Installing Python...', buildInfo)
-    await this.downloadAndExtractPython(buildInfo)
+    log.info('Installing Python...', archBuildInfo)
+    await this.downloadAndExtractPython(archBuildInfo)
   }
 
   // Python実行ファイルのパスを取得
@@ -208,7 +229,15 @@ export class PythonManager {
   }
 
   async installRequirements(): Promise<void> {
-    const requirements = ['jupyter', 'numpy', 'pandas', 'matplotlib', 'mne', 'autoreject']
+    const requirements = [
+      'jupyter',
+      'numpy',
+      'pandas',
+      'matplotlib',
+      'mne==1.5.1',
+      'autoreject',
+      'statsmodels'
+    ]
     const pythonPath = this.getPythonPath()
 
     log.info('Installing required packages...')
