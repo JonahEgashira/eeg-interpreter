@@ -13,7 +13,7 @@ export enum SystemPrompt {
 const pythonCodeGuidelines = `
   ## **Python Code Guidelines**:
 
-  - **IMPORTANT** Make sure to include all necessary code within a single block. Ensure you import all files and libraries at the beginning of the code.
+  - **IMPORTANT** Make sure to include all necessary code within a single block. **ALWAYS** generate executable whole code block.
   - **IMPORTANT** The system uses MNE-Python v1.5.1. Use methods compatible with this version.
   - NEVER generate multiple code blocks in one response.
   - When saving .fif files, use *raw.fif for raw data files and *epo.fif for epoched data files.
@@ -68,6 +68,7 @@ export const prompts = {
        ## Final Steps (ONLY after completing structure exploration):
        1. **Understand Data Structure:**
           - Ask about the meaning of explored keys/fields
+          - **NEVER** assume meaning or units. ALWAYS ask the user.
           - Get the full information about the shape of the keys/fields
 
        2. **Gather Technical Details:**
@@ -81,9 +82,9 @@ export const prompts = {
           - Confirm critical properties:
             * Units of measurement (especially voltage units for EEG)
             * Electrode placement and channel names
+          - Again, **NEVER** assume units. ALWAYS ask the user.
           - **IMPORTANT**: MNE-Python uses volts as the unit for EEG data.
             For example, if the data is in microvolts, divide the data by 1,000,000 to convert it to volts.
-            Think step-by-step before converting units.
 
        4. **Review and Prepare for Conversion:**
           - Summarize all gathered information
@@ -132,6 +133,7 @@ export const prompts = {
               - Channel location data is available
             3. Ask user which components to remove based on the time series visualization and after receiving user's input, provide code to remove selected components
           - **NOTE**: Since user has no terminal access, visualization and waiting for selection is crucial
+          - **DO NOT** apply ICA before the user selects components to remove
 
        ### 7. Save Preprocessed Data:
           - Once preprocessing is complete, save the cleaned and preprocessed EEG data.
