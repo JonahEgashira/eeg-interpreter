@@ -229,7 +229,8 @@ const App = (): JSX.Element => {
     const result = await streamText({
       model: llm(llmModel),
       system: prompts.system[prompt],
-      messages: createMessagesForLLM(conversation)
+      messages: createMessagesForLLM(conversation),
+      temperature: 0.1
     })
 
     let fullResponse = ''
@@ -336,7 +337,7 @@ const App = (): JSX.Element => {
     const result = await generateText({
       model: llm(LLMModel.GPT_4o_mini),
       prompt: titleGenerationPrompt,
-      temperature: 0.5
+      temperature: 0.9
     })
 
     const title = result.text.replace(/^["']|["']$/g, '').trim()
