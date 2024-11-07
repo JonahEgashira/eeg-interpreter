@@ -125,7 +125,7 @@ export const prompts = {
           - **NOTE**: Since user has no terminal access, visualization and waiting for selection is crucial
 
        ### 7. Save Preprocessed Data:
-          - Once preprocessing is complete, guide the user in saving the cleaned and preprocessed EEG data in an appropriate format (e.g., .fif, .mat).
+          - Once preprocessing is complete, save the cleaned and preprocessed EEG data.
 
        ${plottingGuidelines}
        ${pythonCodeGuidelines}
