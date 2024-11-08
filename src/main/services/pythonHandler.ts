@@ -43,13 +43,6 @@ const PYTHON_BUILD_INFO: Record<string, PlatformBuildInfo> = {
       executablePath: 'bin/python3'
     }
   },
-  linux: {
-    x64: {
-      url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-unknown-linux-gnu-install_only.tar.gz`,
-      platformDir: 'python',
-      executablePath: 'bin/python3'
-    }
-  },
   win32: {
     x64: {
       url: `${BASE_URL}/${RELEASE_VERSION}/cpython-${PYTHON_VERSION}+${RELEASE_VERSION}-x86_64-pc-windows-msvc-shared-install_only.tar.gz`,
@@ -115,17 +108,32 @@ export class PythonManager {
 
     const env = { ...process.env }
     const pathSeparator = process.platform === 'win32' ? ';' : ':'
-    const binDir = path.join(this.pythonDir, 'bin')
 
-    // PATHの設定
-    env.PATH = [binDir, env.PATH].join(pathSeparator)
+    // Windowsの場合はScriptsディレクトリ、それ以外はbinディレクトリを使用
+    const binDir =
+      process.platform === 'win32'
+        ? path.join(this.pythonDir, 'Scripts')
+        : path.join(this.pythonDir, 'bin')
+
+    // PATHの設定（Windowsの場合はpythonDirも追加）
+    env.PATH =
+      process.platform === 'win32'
+        ? [binDir, this.pythonDir, env.PATH].join(pathSeparator)
+        : [binDir, env.PATH].join(pathSeparator)
 
     // PYTHONHOME, PYTHONPATHの設定
     env.PYTHONHOME = this.pythonDir
-    env.PYTHONPATH = path.join(this.pythonDir, 'lib', 'python3.11', 'site-packages')
+
+    // Windowsの場合のパス設定を修正
+    if (process.platform === 'win32') {
+      env.PYTHONPATH = path.join(this.pythonDir, 'Lib', 'site-packages')
+    } else {
+      env.PYTHONPATH = path.join(this.pythonDir, 'lib', 'python3.11', 'site-packages')
+    }
 
     return env
   }
+
   private async downloadAndExtractPython(buildInfo: PythonBuildInfo): Promise<void> {
     if (!this.pythonDir) throw new Error('Python directory is not set')
 
