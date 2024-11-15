@@ -242,7 +242,7 @@ export class PythonManager {
       'numpy',
       'pandas',
       'matplotlib',
-      'mne==1.5.1',
+      'mne',
       'autoreject',
       'statsmodels'
     ]

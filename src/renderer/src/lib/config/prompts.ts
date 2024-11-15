@@ -122,7 +122,9 @@ export const prompts = {
               - User explicitly requests them
               - Channel location data is available
             3. Ask user which components to remove based on the time series visualization and after receiving user's input, provide code to remove selected components
-          - **NOTE**: Since user has no terminal access, visualization and waiting for selection is crucial
+          - **NOTE**
+             - Since user has no terminal access, visualization and waiting for selection is crucial
+             - By default, set n_components equal to the number of channels
           - **DO NOT** apply ICA before the user selects components to remove
 
        ### 7. Save Preprocessed Data:
@@ -191,6 +193,7 @@ export const prompts = {
     ## Workflow Rules
     1. Start with "context-extractor" and output this stageuntil:
        - Data structure is clearly understood AND .fif file is confirmed to be generated/saved
+       - Make sure the .fif file is successfully generated/saved
        - User explicitly requests preprocessing/analysis
 
     2. Output "pre-processor" only when:
