@@ -267,19 +267,15 @@ export class PythonManager {
     for (const pkg of requirements) {
       log.info(`Installing ${pkg}...`)
       await new Promise<void>((resolve, reject) => {
-        exec(
-          `"${pythonPath}" -m pip install ${pkg}`,
-          { env: this.getEnv() },
-          (error, stdout, stderr) => {
-            if (error) {
-              log.error(`Error installing ${pkg}:`, stderr)
-              reject(error)
-            } else {
-              log.info(`${pkg} installed successfully`, stdout)
-              resolve()
-            }
+        exec(`"${pythonPath}" -m pip install ${pkg}`, { env: this.getEnv() }, (error) => {
+          if (error) {
+            log.error(`Failed to install ${pkg}:`, error)
+            reject(error)
+          } else {
+            log.info(`Successfully installed ${pkg}`)
+            resolve()
           }
-        )
+        })
       })
     }
 
