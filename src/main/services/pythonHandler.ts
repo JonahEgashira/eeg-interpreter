@@ -290,7 +290,6 @@ export class PythonManager {
 export async function startJupyterServer(): Promise<void> {
   const pythonManager = PythonManager.getInstance()
   await pythonManager.setup()
-  await pythonManager.installRequirements() // 必要なパッケージのインストールを追加
 
   const pythonDir = path.dirname(pythonManager.getPythonPath())
 
@@ -298,7 +297,7 @@ export async function startJupyterServer(): Promise<void> {
   const jupyterPath =
     process.platform === 'win32'
       ? path.join(pythonDir, 'Scripts', 'jupyter.exe') // Windows用
-      : path.join(pythonDir, 'bin', 'jupyter') // macOS/Linux用
+      : path.join(pythonDir, 'jupyter') // macOS/Linux用
 
   // Jupyter実行ファイルの存在確認
   if (!fs.existsSync(jupyterPath)) {
