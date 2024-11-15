@@ -392,7 +392,7 @@ const App = (): JSX.Element => {
         await saveConversation(finalConversation)
       }
     },
-    [currentConversation]
+    [currentConversation, autoAssistantEnabled, systemPrompt]
   )
 
   const handleFileSelect = useCallback(
