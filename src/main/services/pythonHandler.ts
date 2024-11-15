@@ -84,7 +84,7 @@ export class PythonManager {
 
     // Pythonが既にインストールされているか確認
     if (fs.existsSync(this.pythonPath)) {
-      log.info('Python is already installed')
+      log.info(`Python is already installed at ${this.pythonPath}`)
       return
     }
 
@@ -253,8 +253,13 @@ export class PythonManager {
     // ensurepipを使用してpipをインストール
     await new Promise<void>((resolve, reject) => {
       exec(`"${pythonPath}" -m ensurepip --upgrade`, { env: this.getEnv() }, (error) => {
-        if (error) reject(error)
-        else resolve()
+        if (error) {
+          log.error('Error installing pip:', error)
+          reject(error)
+        } else {
+          log.info('pip installed/upgraded successfully')
+          resolve()
+        }
       })
     })
 
@@ -262,10 +267,19 @@ export class PythonManager {
     for (const pkg of requirements) {
       log.info(`Installing ${pkg}...`)
       await new Promise<void>((resolve, reject) => {
-        exec(`"${pythonPath}" -m pip install ${pkg}`, { env: this.getEnv() }, (error) => {
-          if (error) reject(error)
-          else resolve()
-        })
+        exec(
+          `"${pythonPath}" -m pip install ${pkg}`,
+          { env: this.getEnv() },
+          (error, stdout, stderr) => {
+            if (error) {
+              log.error(`Error installing ${pkg}:`, stderr)
+              reject(error)
+            } else {
+              log.info(`${pkg} installed successfully`, stdout)
+              resolve()
+            }
+          }
+        )
       })
     }
 
@@ -276,9 +290,23 @@ export class PythonManager {
 export async function startJupyterServer(): Promise<void> {
   const pythonManager = PythonManager.getInstance()
   await pythonManager.setup()
+  await pythonManager.installRequirements() // 必要なパッケージのインストールを追加
 
   const pythonDir = path.dirname(pythonManager.getPythonPath())
-  const jupyterPath = path.join(pythonDir, 'jupyter')
+
+  // プラットフォームごとにjupyterの実行ファイルパスを設定
+  const jupyterPath =
+    process.platform === 'win32'
+      ? path.join(pythonDir, 'Scripts', 'jupyter.exe') // Windows用
+      : path.join(pythonDir, 'bin', 'jupyter') // macOS/Linux用
+
+  // Jupyter実行ファイルの存在確認
+  if (!fs.existsSync(jupyterPath)) {
+    log.error(`Jupyter executable not found at ${jupyterPath}`)
+    throw new Error(`Jupyter executable not found at ${jupyterPath}`)
+  } else {
+    log.info(`Jupyter executable found at ${jupyterPath}`)
+  }
 
   return new Promise((resolve, reject) => {
     jupyterProcess = spawn(
@@ -329,13 +357,13 @@ export function stopJupyterServer(): Promise<void> {
     }
 
     jupyterProcess.on('close', () => {
-      console.log('Jupyter server stopped')
+      log.info('Jupyter server stopped')
       jupyterProcess = null
       resolve()
     })
 
     jupyterProcess.on('error', (err) => {
-      console.error('Error stopping Jupyter server:', err)
+      log.error('Error stopping Jupyter server:', err)
       reject(err)
     })
 
@@ -386,22 +414,26 @@ export async function runPythonCode(
       }
     }
 
-    future.done.then(() => {
-      const result: ExecutionResult = { code }
-      if (output) result.output = output
-      if (figurePaths.length) result.figurePaths = figurePaths
+    future.done
+      .then(() => {
+        const result: ExecutionResult = { code }
+        if (output) result.output = output
+        if (figurePaths.length) result.figurePaths = figurePaths
 
-      kernel
-        .shutdown()
-        .then(() => {
-          resolve(result)
+        kernel
+          .shutdown()
+          .then(() => {
+            resolve(result)
 
-          if (figurePaths.length > 0) {
-            runSystemPython(code, conversationId)
-          }
-        })
-        .catch((err) => reject(new Error(`Error during code execution: ${err.message}`)))
-    })
+            if (figurePaths.length > 0) {
+              runSystemPython(code, conversationId)
+            }
+          })
+          .catch((err) => reject(new Error(`Error during code execution: ${err.message}`)))
+      })
+      .catch((err) => {
+        reject(err)
+      })
   })
 }
 
@@ -423,11 +455,15 @@ async function runSystemPython(
       { env: pythonManager.getEnv() },
       async (error, stdout, stderr) => {
         log.info(`Python script execution stdout: ${stdout}`)
-        await fs.promises.unlink(tempFilePath)
+        try {
+          await fs.promises.unlink(tempFilePath)
+        } catch (unlinkError) {
+          log.error(`Error deleting temp file ${tempFilePath}:`, unlinkError)
+        }
 
         if (error) {
-          log.error(`Python script execution error: ${error}`)
-          return reject({ stdout, stderr })
+          log.error(`Python script execution error: ${stderr || error.message}`)
+          return reject({ stdout, stderr: stderr || error.message })
         }
 
         resolve({ stdout, stderr })
@@ -445,7 +481,7 @@ export async function saveConversationWithPythonResult(
     const updatedConversation = addExecutionResult(conversation, messageId, executionResult)
     await saveConversation(updatedConversation)
   } catch (error) {
-    console.error('Error updating and saving conversation:', error)
+    log.error('Error updating and saving conversation:', error)
     throw error
   }
 }
