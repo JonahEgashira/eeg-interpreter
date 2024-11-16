@@ -57,7 +57,6 @@ export const prompts = {
           - Find keys that have nested structures or are objects
           - For nested structures, objects, or arrays, print nested keys, shapes, and types to understand the data structure
           - **NEVER** output the actual data, only the structure
-          - Repeat this process based on user interest
 
        ## Final Steps (ONLY after completing structure exploration):
        1. **Understand Data Structure:**

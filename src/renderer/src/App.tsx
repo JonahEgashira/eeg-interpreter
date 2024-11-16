@@ -96,6 +96,11 @@ const App = (): JSX.Element => {
           throw new Error('Google API Key not set')
         }
         return createGoogleGenerativeAI({ apiKey: googleApiKey })
+      case LLMModel.gemini_exp_1114:
+        if (!googleApiKey) {
+          throw new Error('Google API Key not set')
+        }
+        return createGoogleGenerativeAI({ apiKey: googleApiKey })
       case LLMModel.claude_3_5_sonnet:
         if (!anthropicApiKey) {
           throw new Error('Anthropic API Key not set')
@@ -191,9 +196,9 @@ const App = (): JSX.Element => {
   }
 
   const getSuitableAssistant = async (conversation: Conversation): Promise<SystemPrompt> => {
-    const llm = getLLMInstance(llmModel)
+    const llm = getLLMInstance(LLMModel.GPT_4o)
     const result = await generateObject({
-      model: llm(llmModel),
+      model: llm(LLMModel.GPT_4o),
       schema: promptSchema,
       system: prompts.navigator,
       messages: createMessagesForLLM(conversation)
