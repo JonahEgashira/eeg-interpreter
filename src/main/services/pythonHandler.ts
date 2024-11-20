@@ -243,6 +243,7 @@ export class PythonManager {
       'pandas',
       'matplotlib',
       'mne',
+      'mne-connectivity',
       'autoreject',
       'statsmodels'
     ]

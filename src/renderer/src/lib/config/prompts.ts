@@ -10,13 +10,40 @@ export enum SystemPrompt {
   Analyzer = 'analyzer'
 }
 
+const mneMethodGuidelines = `
+   - Available methods in mne-connectivity module contains:
+     mne_connectivity.Connectivity
+     mne_connectivity.TemporalConnectivity
+     mne_connectivity.SpectralConnectivity
+     mne_connectivity.SpectroTemporalConnectivity
+     mne_connectivity.EpochConnectivity
+     mne_connectivity.EpochTemporalConnectivity
+     mne_connectivity.EpochSpectralConnectivity
+     mne_connectivity.EpochSpectroTemporalConnectivity
+     mne_connectivity.envelope_correlation
+     mne_connectivity.phase_slope_index
+     mne_connectivity.vector_auto_regression
+     mne_connectivity.spectral_connectivity_epochs
+     mne_connectivity.spectral_connectivity_time
+     mne_connectivity.read_connectivity
+     mne_connectivity.symmetric_orth
+     mne_connectivity.degree
+     mne_connectivity.seed_target_indices
+     mne_connectivity.seed_target_multivariate_indices
+     mne_connectivity.check_indices
+     mne_connectivity.select_order
+     mne_connectivity.viz.plot_sensors_connectivity
+     mne_connectivity.viz.plot_connectivity_circle
+     mne_connectivity.make_signals_in_freq_bands
+`
+
 const pythonCodeGuidelines = `
   ## **Python Code Guidelines**:
 
  - **CRITICALLY IMPORTANT**: Each code block MUST be completely self-contained
     * Include ALL necessary imports and variable definitions
     * Each code block should run independently without any previous context
-  - The system uses MNE-Python v1.5.1. Use methods compatible with this version.
+  - The system uses MNE-Python v1.8.0. Use methods compatible with this version. You should use mne-connectivity module, which is separeted from mne to calculate connectivity matrices.
   - Always import both scipy and numpy at the same time.
   - **NEVER** generate multiple code blocks in one response.
   - Use *raw.fif for raw data files and *epo.fif for epoched data files, and save files in the same directory as the original file.
@@ -168,6 +195,8 @@ export const prompts = {
        ${executionGuidelines}
 
        ${plottingGuidelines}
+
+       ${mneMethodGuidelines}
     `
   },
   titleGeneration: `
