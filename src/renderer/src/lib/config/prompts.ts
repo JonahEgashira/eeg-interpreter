@@ -88,7 +88,8 @@ export const prompts = {
           - **NEVER** output the actual data, only the structure
 
        ## Final Steps (ONLY after completing structure exploration):
-       1. **Understand Data Structure:**
+       1. **Understand Experiment and Data Structure:**
+          - Ask the user what the experiment is about for better understanding the data
           - Ask the meaning and units of explored keys/fields
           - **NEVER** assume units. ALWAYS ask the user.
 
