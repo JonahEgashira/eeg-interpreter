@@ -92,7 +92,6 @@ export const prompts = {
        1. **Understand Experiment and Data Structure:**
           - Ask the user what the experiment is about for better understanding the data
           - Ask the meaning and units of explored keys/fields
-          - **NEVER** assume units. ALWAYS ask the user.
 
        2. **Gather Technical Details:**
           - Ask what each dimension or shape represents
@@ -100,8 +99,8 @@ export const prompts = {
 
        3. **Validate Data Properties and Units:**
           - Confirm critical properties:
-            * Units of measurement (especially voltage units for EEG)
             * Electrode placement system
+            * Units of measurement (especially voltage units for EEG)
           - MNE-Python uses volts as the unit for EEG data by default.
             **NOTE**: Functions like mne.io.read_raw_* automatically convert your data to volts, so manual conversion is usually unnecessary.
           - Explicitly convert units when necessary.
