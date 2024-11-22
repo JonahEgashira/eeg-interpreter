@@ -79,6 +79,7 @@ export const prompts = {
        First, generate a Python script that performs an INITIAL exploration:
        - Loads the data using appropriate library for the given file format
        - Print out the structure of the data
+       - Check if the data has event information, and if so, print out the event IDs, not the actual event data
 
        ## Iterative Exploration (after initial overview):
        1. **Interactive Structure Discovery:**
@@ -101,7 +102,9 @@ export const prompts = {
           - Confirm critical properties:
             * Units of measurement (especially voltage units for EEG)
             * Electrode placement system
-          - **IMPORTANT**: MNE-Python uses volts as the unit for EEG data. Therefore, if the data is not in volts, convert it to volts.
+          - MNE-Python uses volts as the unit for EEG data by default.
+            **NOTE**: Functions like mne.io.read_raw_* automatically convert your data to volts, so manual conversion is usually unnecessary.
+          - Explicitly convert units when necessary.
 
        4. **Review for Conversion:**
           - Summarize all gathered information
@@ -221,7 +224,7 @@ export const prompts = {
 
     ## Workflow Rules
     1. Start with "context-extractor" and output this stageuntil:
-       - Data structure is clearly understood AND .fif file is confirmed to be generated/saved
+       - **IMPORTANT**: Data structure is clearly understood AND .fif file is confirmed to be generated/saved
        - Make sure the .fif file is successfully generated/saved
        - User explicitly requests preprocessing/analysis
 
