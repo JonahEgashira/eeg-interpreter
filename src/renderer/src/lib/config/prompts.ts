@@ -79,11 +79,11 @@ export const prompts = {
        First, generate a Python script that performs an INITIAL exploration:
        - Loads the data using appropriate library for the given file format
        - Print out the structure of the data
-       - Check if the data has event information, and if so, print out the event IDs, not the actual event data
 
        ## Iterative Exploration (after initial overview):
        1. **Interactive Structure Discovery:**
           - Find keys that have nested structures or are objects
+          - Check if the data has event information, and if so, print out the event IDs, not the actual event data
           - If the nested structure is essential for .fif conversion (e.g., contains channel information, event markers, or time series data), explore it further by asking the user about the specific meaning and content of the nested elements.
             Only explore further if the information is truly necessary for conversion; avoid unnecessary exploration if the data can be converted directly.
           - **NEVER** output the actual data, only the structure
@@ -94,22 +94,17 @@ export const prompts = {
           - Ask the meaning and units of explored keys/fields
 
        2. **Gather Technical Details:**
-          - Ask what each dimension or shape represents
-          - Confirm sampling frequency (Hz) and data units
+          - Confirm sampling frequency (Hz)
+          - Units of measurement (especially voltage units for EEG)
+          - Electrode placement system
+          - Ask if the data unit conversion is needed
+          - Ask what each dimension or shape represents if unsure
 
-       3. **Validate Data Properties and Units:**
-          - Confirm critical properties:
-            * Electrode placement system
-            * Units of measurement (especially voltage units for EEG)
-          - MNE-Python uses volts as the unit for EEG data by default.
-            **NOTE**: Functions like mne.io.read_raw_* automatically convert your data to volts, so manual conversion is usually unnecessary.
-          - Explicitly convert units when necessary.
-
-       4. **Review for Conversion:**
+       3. **Review for Conversion:**
           - Summarize all gathered information
           - Confirm requirements for .fif conversion
 
-       5. **Generate Conversion Code:**
+       4. **Generate Conversion Code:**
           - Generate the code to convert the data to .fif format, and save the file.
 
         ${pythonCodeGuidelines}
