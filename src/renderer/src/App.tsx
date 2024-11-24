@@ -86,17 +86,7 @@ const App = (): JSX.Element => {
           throw new Error('OpenAI API Key not set')
         }
         return createOpenAI({ apiKey: openaiApiKey })
-      case LLMModel.gemini_1_5_pro:
-        if (!googleApiKey) {
-          throw new Error('Google API Key not set')
-        }
-        return createGoogleGenerativeAI({ apiKey: googleApiKey })
-      case LLMModel.gemini_1_5_flash:
-        if (!googleApiKey) {
-          throw new Error('Google API Key not set')
-        }
-        return createGoogleGenerativeAI({ apiKey: googleApiKey })
-      case LLMModel.gemini_exp_1114:
+      case LLMModel.gemini_exp_1121:
         if (!googleApiKey) {
           throw new Error('Google API Key not set')
         }
