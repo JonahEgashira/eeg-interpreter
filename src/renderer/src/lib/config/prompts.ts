@@ -25,16 +25,6 @@ const mneMethodGuidelines = `
      mne_connectivity.vector_auto_regression
      mne_connectivity.spectral_connectivity_epochs
      mne_connectivity.spectral_connectivity_time
-     mne_connectivity.read_connectivity
-     mne_connectivity.symmetric_orth
-     mne_connectivity.degree
-     mne_connectivity.seed_target_indices
-     mne_connectivity.seed_target_multivariate_indices
-     mne_connectivity.check_indices
-     mne_connectivity.select_order
-     mne_connectivity.viz.plot_sensors_connectivity
-     mne_connectivity.viz.plot_connectivity_circle
-     mne_connectivity.make_signals_in_freq_bands
 `
 
 const pythonCodeGuidelines = `
