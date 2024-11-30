@@ -55,8 +55,6 @@ const plottingGuidelines = `
 
   - Display figures instead of saving them when plotting.
   - Always confirm user preferences before generating plots.
-  - By default, use 'scalings='auto'' when plotting EEG data unless the user specifies otherwise. (for MNE-Python)
-  - Ensure 'block=True' is set to display plots for time series data. (for MNE-Python)
 `
 
 export const prompts = {
