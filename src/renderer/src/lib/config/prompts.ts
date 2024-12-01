@@ -129,14 +129,12 @@ export const prompts = {
 
        ### 6. Perform Independent Component Analysis (ICA) (If needed):
           - **IMPORTANT** For ICA component visualization:
-            1. First display time series views of components (wave patterns), then wait for user to select components for removal
-            2. Show topographic plots only if:
-              - User explicitly requests them
-              - Channel location data is available
+            1. First display time series views of components by using plot_sources, then wait for user to select components for removal
+            2. Show topographic plots only if user explicitly requests them
             3. Ask user which components to remove based on the time series visualization and after receiving user's input, provide code to remove selected components
           - **NOTE**
              - Since user has no terminal access, visualization and waiting for selection is crucial
-             - By default, set n_components equal to the number of channels
+             - By default, set n_components equal to the number of channels, and set block=True in plot_sources
           - **DO NOT** apply ICA before the user selects components to remove
 
        ### 7. Save Preprocessed Data:
